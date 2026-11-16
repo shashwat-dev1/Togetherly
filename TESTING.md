@@ -10,9 +10,15 @@ Every core component, game engine, and synchronization flow in Togetherly must b
 
 ### 2.1 Unit Tests (`src/__tests__/unit/`)
 - `gameRules.test.ts`:
-  - Tic-Tac-Toe horizontal, diagonal, draw detection, in-progress checks.
-  - Rock Paper Scissors win matrix (Rock > Scissors, Paper > Rock, Scissors > Paper, Ties).
-  - This or That affinity percentage formula: `Math.round((matches / total) * 100)`.
+  - **Tic-Tac-Toe:** Horizontal, diagonal, draw detection, in-progress checks.
+  - **Rock Paper Scissors:** Win matrix (Rock > Scissors, Paper > Rock, Scissors > Paper, Ties).
+  - **This or That:** Affinity percentage formula: `Math.round((matches / total) * 100)`.
+  - **Connect Four:** Gravity drop row calculation, 4-in-a-row detection in horizontal, vertical, and diagonal directions, full-board draw detection.
+  - **Memory Match:** 16-card generation (8 pairs), deterministic layout matching across session seeds, card shuffling variation.
+  - **Word Guess:** Wordle-standard evaluation (correct green, present yellow, absent gray), multi-letter handling, 50+ romantic word bank.
+  - **Couple Trivia:** 150-question bank coverage across 5 categories, 4 multiple choice options per item, valid correct answers.
+  - **Truth or Dare:** 100+ prompt catalog across 5 wholesome categories, mature deck isolation.
+  - **Draw & Guess:** 60-prompt catalog with romantic, food, objects, animals, activities.
 - `pairingAndValidation.test.ts`:
   - Zod schemas for user registration, login, and 6-character invite codes.
   - Invitation code generation (uppercase alphanumeric, length 6).

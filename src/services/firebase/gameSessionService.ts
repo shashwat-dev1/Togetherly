@@ -326,6 +326,10 @@ export const GameSessionService = {
     } else {
       // Generic state merge
       Object.assign(nextGameState, payload);
+      if (payload.scores) Object.assign(nextScores, payload.scores);
+      if (payload.winnerId !== undefined) nextWinner = payload.winnerId;
+      if (payload.status) nextStatus = payload.status;
+      if (payload.currentTurn) nextTurn = payload.currentTurn;
     }
 
     const updatedSession: GameSession = {
@@ -479,6 +483,21 @@ export const GameSessionService = {
           winner: roundWinner,
           [player1Id]: ans1,
           [player2Id]: ans2,
+        };
+      } else if (session.gameId === 'couple-trivia') {
+        const p1Correct = ans1?.selectedOption >= 0 && ans1?.selectedOption === ans1?.correctIndex;
+        const p2Correct = ans2?.selectedOption >= 0 && ans2?.selectedOption === ans2?.correctIndex;
+
+        const p1Pts = p1Correct ? 100 + (ans1?.timeLeft || 0) * 5 : 0;
+        const p2Pts = p2Correct ? 100 + (ans2?.timeLeft || 0) * 5 : 0;
+
+        if (p1Correct) nextScores[player1Id] = (nextScores[player1Id] || 0) + p1Pts;
+        if (p2Correct) nextScores[player2Id] = (nextScores[player2Id] || 0) + p2Pts;
+
+        revealedRoundResult = {
+          round,
+          [player1Id]: { ...ans1, pointsGained: p1Pts, correct: p1Correct },
+          [player2Id]: { ...ans2, pointsGained: p2Pts, correct: p2Correct },
         };
       }
 

@@ -94,7 +94,7 @@ export const GAME_CATALOGUE: GameDefinition[] = [
     gameMode: 'turn_based',
     estimatedMinutes: 8,
     isPremium: false,
-    isImplemented: false,
+    isImplemented: true,
     description: 'Curated decks ranging from wholesome giggles to deep romantic reflections. Strictly safe, non-coercive, and consensual.',
     instructions: [
       'Pick whether you want a Truth or a Dare.',
@@ -113,7 +113,7 @@ export const GAME_CATALOGUE: GameDefinition[] = [
     gameMode: 'simultaneous',
     estimatedMinutes: 6,
     isPremium: true,
-    isImplemented: false,
+    isImplemented: true,
     description: 'Timed multi-choice trivia rounds. Answer general knowledge questions and see who has the quickest wits.',
     instructions: [
       'Answer questions against the clock.',
@@ -132,7 +132,7 @@ export const GAME_CATALOGUE: GameDefinition[] = [
     gameMode: 'realtime',
     estimatedMinutes: 5,
     isPremium: true,
-    isImplemented: false,
+    isImplemented: true,
     description: 'One partner gets a secret prompt and draws on the canvas. The other partner watches the strokes appear in real-time and submits guesses.',
     instructions: [
       'One partner draws the assigned word.',
@@ -151,7 +151,7 @@ export const GAME_CATALOGUE: GameDefinition[] = [
     gameMode: 'realtime',
     estimatedMinutes: 4,
     isPremium: false,
-    isImplemented: false,
+    isImplemented: true,
     description: 'Classic vertical strategy. Take turns dropping tokens down the columns to line up 4 pieces horizontally, vertically, or diagonally.',
     instructions: [
       'Tap a column to drop your colored token.',
@@ -169,7 +169,7 @@ export const GAME_CATALOGUE: GameDefinition[] = [
     gameMode: 'turn_based',
     estimatedMinutes: 4,
     isPremium: false,
-    isImplemented: false,
+    isImplemented: true,
     description: 'Turn-based card flipping game. Uncover matching couple-themed symbols and test your concentration together.',
     instructions: [
       'Flip two cards on your turn.',
@@ -188,7 +188,7 @@ export const GAME_CATALOGUE: GameDefinition[] = [
     gameMode: 'turn_based',
     estimatedMinutes: 5,
     isPremium: true,
-    isImplemented: false,
+    isImplemented: true,
     description: 'Solve the hidden 5-letter word in 6 attempts with colored tile feedback indicating correct positions.',
     instructions: [
       'Guess the 5-letter word.',

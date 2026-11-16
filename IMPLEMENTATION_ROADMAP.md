@@ -40,19 +40,19 @@
 - [ ] Simultaneous submission & double-blind reveal mechanism.
 - [ ] Disconnect and abandonment timer handler.
 
-### Phase 3: First Four Playable Games
-- [ ] Game 1: **Who Knows Whom Better?** (Relationship Quiz, 7 question decks, simultaneous reveal).
-- [ ] Game 2: **This or That** (Preferences comparison, affinity % calculation).
-- [ ] Game 3: **Tic-Tac-Toe** (Realtime 3x3 grid, alternating turns, win/draw detection, rematch).
-- [ ] Game 4: **Rock Paper Scissors** (Best of 3, simultaneous hidden picks, reveal animation).
+### Phase 3: First Four Playable Games (Completed)
+- [x] Game 1: **Who Knows Whom Better?** (Relationship Quiz, 7 question decks, simultaneous reveal).
+- [x] Game 2: **This or That** (Preferences comparison, affinity % calculation).
+- [x] Game 3: **Tic-Tac-Toe** (Realtime 3x3 grid, alternating turns, win/draw detection, rematch).
+- [x] Game 4: **Rock Paper Scissors** (Best of 3, simultaneous hidden picks, reveal animation).
 
-### Phase 4: Remaining Six Games
-- [ ] Game 5: **Truth or Dare** (Curated romantic/deep/spicy prompts, age gating).
-- [ ] Game 6: **Couple Trivia** (Timed multiple choice, category selection, leaderboard).
-- [ ] Game 7: **Draw & Guess** (SVG stroke-vector serialization, live draw sync, guess submit).
-- [ ] Game 8: **Connect Four** (7x6 column drop physics/logic, 4-in-a-row detection).
-- [ ] Game 9: **Memory Match** (Card grid flip, turn matching, pairs tracker).
-- [ ] Game 10: **Word Guess** (Couples themed wordle/clue gameplay).
+### Phase 4: Remaining Six Games (Completed)
+- [x] Game 5: **Truth or Dare** (100+ curated prompts across Cute, Funny, Romantic, Deep, Adventurous, and optional age-gated mature decks).
+- [x] Game 6: **Couple Trivia** (150 curated questions across 5 categories, timed quiz rounds, speed point calculation, partner reveal, match leaderboard).
+- [x] Game 7: **Draw & Guess** (Structured SVG vector stroke sync, 60 curated romantic prompts, color/brush picker, undo/clear, live guess validation, cooperative scoring).
+- [x] Game 8: **Connect Four** (7x6 column drop physics/logic, 4-in-a-row detection in horizontal, vertical, and both diagonals, full-board draw detection).
+- [x] Game 9: **Memory Match** (16 cards with 8 couple-themed pairs, deterministic seed shuffle, alternating turns with bonus turn on match, pair tracking).
+- [x] Game 10: **Word Guess** (5-letter couple word puzzles with Wordle-standard letter evaluation, 6 collaborative attempts, on-screen keyboard, romantic hints).
 
 ### Phase 5: Engagement & Shared World
 - [ ] Daily Challenge system with server reset logic.

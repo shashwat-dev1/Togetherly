@@ -31,6 +31,12 @@ import { WhoKnowsWhomGame } from '@/games/who-knows-whom/WhoKnowsWhomGame';
 import { ThisOrThatGame } from '@/games/this-or-that/ThisOrThatGame';
 import { TicTacToeGame } from '@/games/tic-tac-toe/TicTacToeGame';
 import { RockPaperScissorsGame } from '@/games/rock-paper-scissors/RockPaperScissorsGame';
+import { TruthOrDareGame } from '@/games/truth-or-dare/TruthOrDareGame';
+import { CoupleTriviaGame } from '@/games/couple-trivia/CoupleTriviaGame';
+import { DrawAndGuessGame } from '@/games/draw-and-guess/DrawAndGuessGame';
+import { ConnectFourGame } from '@/games/connect-four/ConnectFourGame';
+import { MemoryMatchGame } from '@/games/memory-match/MemoryMatchGame';
+import { WordGuessGame } from '@/games/word-guess/WordGuessGame';
 import { ArrowLeft, WifiOff, Users, Play, Heart } from 'lucide-react-native';
 
 export default function GameRunnerScreen() {
@@ -290,6 +296,72 @@ export default function GameRunnerScreen() {
               currentUser={user}
               partnerName={partner.displayName}
               onSubmitPick={(round, pick) => submitAnswer(round, pick)}
+              onRematch={handleRematch}
+              onExit={handleExit}
+            />
+          )}
+
+          {game.id === 'truth-or-dare' && (
+            <TruthOrDareGame
+              session={session}
+              currentUser={user}
+              partnerName={partner.displayName}
+              onMakeMove={(actionType, payload) => submitAction(actionType, payload)}
+              onRematch={handleRematch}
+              onExit={handleExit}
+            />
+          )}
+
+          {game.id === 'couple-trivia' && (
+            <CoupleTriviaGame
+              session={session}
+              currentUser={user}
+              partnerName={partner.displayName}
+              onSubmitAnswer={(round, answer) => submitAnswer(round, answer)}
+              onRematch={handleRematch}
+              onExit={handleExit}
+            />
+          )}
+
+          {game.id === 'draw-and-guess' && (
+            <DrawAndGuessGame
+              session={session}
+              currentUser={user}
+              partnerName={partner.displayName}
+              onMakeMove={(actionType, payload) => submitAction(actionType, payload)}
+              onRematch={handleRematch}
+              onExit={handleExit}
+            />
+          )}
+
+          {game.id === 'connect-four' && (
+            <ConnectFourGame
+              session={session}
+              currentUser={user}
+              partnerName={partner.displayName}
+              onMakeMove={(actionType, payload) => submitAction(actionType, payload)}
+              onRematch={handleRematch}
+              onExit={handleExit}
+            />
+          )}
+
+          {game.id === 'memory-match' && (
+            <MemoryMatchGame
+              session={session}
+              currentUser={user}
+              partnerName={partner.displayName}
+              onMakeMove={(actionType, payload) => submitAction(actionType, payload)}
+              onRematch={handleRematch}
+              onExit={handleExit}
+            />
+          )}
+
+          {game.id === 'word-guess' && (
+            <WordGuessGame
+              session={session}
+              currentUser={user}
+              partnerName={partner.displayName}
+              onMakeMove={(actionType, payload) => submitAction(actionType, payload)}
               onRematch={handleRematch}
               onExit={handleExit}
             />
