@@ -13,6 +13,12 @@
     },
     "android": {
       "package": "com.togetherly.couples",
+      "permissions": [
+        "INTERNET",
+        "VIBRATE",
+        "ACCESS_NETWORK_STATE",
+        "POST_NOTIFICATIONS"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#FFF9F5",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

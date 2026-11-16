@@ -1,8 +1,8 @@
 /**
- * TOGETHERLY — PROFILE & SETTINGS
+ * TOGETHERLY — PROFILE & SETTINGS (CLOSED PILOT)
  *
  * User profile, partner status, theme switcher,
- * granular notification preferences, subscription tier details,
+ * granular notification preferences, in-app feedback modal,
  * partner disconnect, and sign out.
  */
 import React, { useState } from 'react';
@@ -22,12 +22,10 @@ import { useCoupleStore } from '@/stores/useCoupleStore';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { Avatar } from '@/components/common/Avatar';
 import { AppCard, Badge } from '@/components/common/AppCard';
-import { AppButton } from '@/components/common/AppButton';
-import { Modal } from '@/components/common/Modal';
+import { FeedbackModal } from '@/components/common/FeedbackModal';
 import {
   Moon,
   Sun,
-  Crown,
   Bell,
   Volume2,
   Shield,
@@ -39,6 +37,7 @@ import {
   Target,
   Trophy,
   Flame,
+  MessageSquare,
 } from 'lucide-react-native';
 
 export default function ProfileScreen() {
@@ -47,7 +46,7 @@ export default function ProfileScreen() {
   const { user, logout, updatePreferences } = useAuthStore();
   const { couple, disconnect } = useCoupleStore();
 
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const prefs = user?.preferences;
   const soundEnabled = prefs?.soundEnabled ?? true;
@@ -110,14 +109,14 @@ export default function ProfileScreen() {
             <Avatar id={user?.avatarId} name={user?.displayName} size={60} />
             <View style={{ marginLeft: 14, flex: 1 }}>
               <Text style={[styles.userName, { color: theme.colors.textPrimary }]}>
-                {user?.displayName}
+                {user?.displayName || 'Player'}
               </Text>
               <Text style={[styles.userEmail, { color: theme.colors.textSecondary }]}>
                 {user?.email}
               </Text>
               <Badge
-                label={couple?.subscriptionSummary.isPlus ? 'PLUS MEMBER' : 'FREE PLAN'}
-                variant={couple?.subscriptionSummary.isPlus ? 'secondary' : 'neutral'}
+                label="CLOSED PILOT TESTER"
+                variant="primary"
                 style={{ marginTop: 6 }}
               />
             </View>
@@ -147,27 +146,28 @@ export default function ProfileScreen() {
           </View>
         </AppCard>
 
-        {/* Subscription Tier Management */}
+        {/* Pilot Feedback Section */}
+        <Text style={[styles.groupLabel, { color: theme.colors.textMuted }]}>
+          PILOT TESTER FEEDBACK
+        </Text>
         <AppCard style={styles.sectionCard}>
-          <View style={styles.settingRow}>
+          <TouchableOpacity
+            style={styles.settingRow}
+            onPress={() => setShowFeedbackModal(true)}
+          >
             <View style={styles.settingIconCol}>
-              <Crown size={20} color={theme.colors.warning} />
+              <MessageSquare size={20} color={theme.colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.settingTitle, { color: theme.colors.textPrimary }]}>
-                Togetherly Plus
+                Send Feedback or Report Issue
               </Text>
               <Text style={[styles.settingSubtitle, { color: theme.colors.textSecondary }]}>
-                Unlock all 10 games, no ads & premium decks for both.
+                Report a bug, sync problem, or suggest improvements
               </Text>
             </View>
-            <AppButton
-              title="Manage"
-              onPress={() => setShowSubscriptionModal(true)}
-              variant="outline"
-              size="sm"
-            />
-          </View>
+            <ChevronRight size={18} color={theme.colors.textMuted} />
+          </TouchableOpacity>
         </AppCard>
 
         {/* Appearance & Sound Settings */}
@@ -358,52 +358,11 @@ export default function ProfileScreen() {
         </AppCard>
       </ScrollView>
 
-      {/* Subscription Plans Modal */}
-      <Modal
-        visible={showSubscriptionModal}
-        onClose={() => setShowSubscriptionModal(false)}
-        title="Togetherly Plus"
-      >
-        <View>
-          <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginBottom: 16 }}>
-            One single plan upgrades both of you! No ads, unlimited premium decks, and all 10 multiplayer games.
-          </Text>
-
-          <View style={[styles.planBox, { borderColor: theme.colors.primary }]}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: theme.colors.textPrimary }}>
-              Monthly Subscription
-            </Text>
-            <Text style={{ fontSize: 20, fontWeight: '800', color: theme.colors.primary, marginVertical: 4 }}>
-              ₹99 / month
-            </Text>
-            <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>
-              Billed monthly via Google Play Billing. Cancel anytime.
-            </Text>
-          </View>
-
-          <View style={[styles.planBox, { borderColor: theme.colors.border, marginTop: 10 }]}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: theme.colors.textPrimary }}>
-              Annual Subscription (Save 58%)
-            </Text>
-            <Text style={{ fontSize: 20, fontWeight: '800', color: theme.colors.secondary, marginVertical: 4 }}>
-              ₹499 / year
-            </Text>
-            <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>
-              Includes 1 year of all upcoming games and virtual world assets.
-            </Text>
-          </View>
-
-          <AppButton
-            title="Subscribe via Google Play"
-            onPress={() => {
-              setShowSubscriptionModal(false);
-              Alert.alert('Google Play Billing', 'Subscription architecture initialized! Ready to connect with live Play Console products.');
-            }}
-            size="lg"
-            style={{ marginTop: 20 }}
-          />
-        </View>
-      </Modal>
+      {/* In-App Feedback Modal */}
+      <FeedbackModal
+        visible={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -436,5 +395,4 @@ const styles = StyleSheet.create({
   subIconCol: { width: 28, alignItems: 'center', marginRight: 6 },
   subSettingTitle: { fontSize: 13, fontWeight: '500' },
   divider: { height: 1, marginVertical: 10 },
-  planBox: { padding: 14, borderRadius: 12, borderWidth: 2 },
 });

@@ -1,56 +1,144 @@
-# Welcome to your Expo app 👋
+# Togetherly — Two people. One little world.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+An Android-first, private multiplayer gaming platform designed exclusively for couples to play, connect, and spend quality time together across any distance.
 
-## Get started
+[![Git Remote](https://img.shields.io/badge/GitHub-Togetherly-purple?logo=github)](https://github.com/shashwat-dev1/Togetherly)
+[![Expo SDK](https://img.shields.io/badge/Expo-SDK%2058-blue?logo=expo)](https://expo.dev)
+[![React Native](https://img.shields.io/badge/React%20Native-0.88-61DAFB?logo=react)](https://reactnative.dev)
+[![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore%20%7C%20Functions-orange?logo=firebase)](https://firebase.google.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20Mode-blue?logo=typescript)](https://www.typescriptlang.org)
+[![Testing](https://img.shields.io/badge/Tests-65%20Passed%20(100%25)-brightgreen)]()
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## 📖 Product Identity & Philosophy
 
-2. Start the app
+Togetherly is **not** a dating app, a chat app, or relationship counselling software.  
+It is a private, shared digital living room for two people.
 
-   ```bash
-   npx expo start
-   ```
+- **Audience:** Long-distance couples, dating pairs, newlyweds, and partners living together.
+- **Platform:** Android-first (iOS compatible via React Native & Expo Router).
+- **Core Experience:** 10 curated multiplayer games, double-blind relationship reveals, server-controlled daily challenges, shared XP progression, and non-punitive streaks.
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 🎮 The 10 Multiplayer Games
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+| # | Game | Mode | Description |
+|---|---|---|---|
+| **1** | **Who Knows Whom Better?** | Simultaneous Reveal | Curated relationship questions answered independently and revealed simultaneously with match score. |
+| **2** | **This or That** | Simultaneous Reveal | Rapid-fire couple preference quiz calculating compatibility percentage. |
+| **3** | **Tic-Tac-Toe** | Turn-Based | Real-time 3x3 board with Hearts & Stars, turn alternation, and instant rematch. |
+| **4** | **Rock Paper Scissors** | Simultaneous Reveal | Best-of-3 animated hand showdown with atomic double-blind reveal. |
+| **5** | **Truth or Dare** | Turn-Based | 100+ curated prompts across Cute, Funny, Romantic, Deep, and Adventurous categories. |
+| **6** | **Couple Trivia** | Timed Simultaneous | 150 trivia questions across 5 categories with timed rounds and speed points. |
+| **7** | **Draw & Guess** | Real-Time Canvas | Vector SVG stroke synchronisation, 60 prompts, live guess chat, and cooperative scoring. |
+| **8** | **Connect Four** | Turn-Based | 7x6 gravity drop board with horizontal, vertical, and diagonal win detection. |
+| **9** | **Memory Match** | Turn-Based | 16-card grid with 8 couple pairs, deterministic seed shuffle, and bonus turn on match. |
+| **10** | **Word Guess** | Cooperative | 5-letter relationship word puzzle with Wordle-standard letter evaluation and hints. |
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## ⚙️ Technology Stack
 
+- **Client:** React Native (0.88.1), Expo SDK 58, Expo Router, TypeScript (Strict Mode).
+- **State & Validation:** Zustand, Zod schemas, TanStack Query.
+- **Styling & UI:** Semantic design token palette (`src/constants/tokens.ts`), Lucide Icons, React Native SVG.
+- **Backend:** Firebase Auth, Cloud Firestore (WebSockets real-time listeners), Cloud Functions (TypeScript v1), Firebase Cloud Messaging.
+- **Security:** Strict Firestore rules, server-authoritative scoring, private answer isolation, and idempotency guarantees.
+
+---
+
+## 🚀 Getting Started (Development)
+
+### 1. Prerequisites
+- Node.js (v18+ or v20+)
+- npm or bun
+- Android device or Android Studio Emulator
+
+### 2. Installation
 ```bash
-npm run reset-project
+git clone https://github.com/shashwat-dev1/Togetherly.git
+cd Togetherly
+npm install
+npm --prefix functions install
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+### 3. Environment Configuration
+Copy the template and choose your runtime mode:
+```bash
+cp .env.example .env
+```
 
-### Other setup steps
+| Mode | Configuration in `.env` | Use Case |
+|---|---|---|
+| **Production / Pilot** | `EXPO_PUBLIC_FIREBASE_MODE=production` + Live Firebase API keys | Closed pilot testing on physical Android devices. |
+| **Emulator** | `EXPO_PUBLIC_FIREBASE_MODE=emulator` | Local development with Firebase Emulator Suite. |
+| **In-Memory Mock** | `EXPO_PUBLIC_FIREBASE_MODE=mock` | Quick UI preview without backend dependencies. |
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+### 4. Running the Development Server
+```bash
+npx expo start
+```
+Press `a` in the terminal to open on an Android emulator or scan the QR code with Expo Go / custom dev client.
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## 🧪 Testing & Quality Gates
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Run the automated test suite and strict typechecks:
 
-## Join the community
+```bash
+# Run 65 automated unit, integration, and security tests
+npm test
 
-Join our community of developers creating universal apps.
+# Run strict TypeScript check (0 errors)
+npx tsc --noEmit
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Run Expo / React Compiler linter (0 errors, 0 warnings)
+npx expo lint
+
+# Build Cloud Functions
+npm --prefix functions run build
+```
+
+---
+
+## 📱 Generating an Android Pilot APK
+
+For internal pilot distribution to 5–6 couples without Google Play:
+
+```bash
+# Install EAS CLI
+npm install -g eas-cli
+
+# Log in to your Expo account
+eas login
+
+# Build a standalone installable APK
+eas build --profile pilot --platform android
+```
+The resulting `.apk` file can be downloaded from Expo and sideloaded directly onto any Android device. See [PILOT_DEPLOYMENT_GUIDE.md](file:///c:/Projects/LDR/PILOT_DEPLOYMENT_GUIDE.md) for complete instructions.
+
+---
+
+## 📚 Pilot Documentation Directory
+
+- [PILOT_READINESS_AUDIT.md](file:///c:/Projects/LDR/PILOT_READINESS_AUDIT.md) — Architectural and security audit of the pilot release.
+- [PILOT_DEPLOYMENT_GUIDE.md](file:///c:/Projects/LDR/PILOT_DEPLOYMENT_GUIDE.md) — Step-by-step instructions for Firebase deployment, rules, and APK distribution.
+- [REALTIME_TEST_PLAN.md](file:///c:/Projects/LDR/REALTIME_TEST_PLAN.md) — 10-point cross-device real-time sync verification plan.
+- [PILOT_TESTING_CHECKLIST.md](file:///c:/Projects/LDR/PILOT_TESTING_CHECKLIST.md) — Manual testing checklist for pilot operators.
+- [PILOT_FEEDBACK_GUIDE.md](file:///c:/Projects/LDR/PILOT_FEEDBACK_GUIDE.md) — Guide for testers on submitting in-app bug reports and suggestions.
+- [ENVIRONMENT_SETUP.md](file:///c:/Projects/LDR/ENVIRONMENT_SETUP.md) — Complete environment variable reference.
+- [DATABASE_SCHEMA.md](file:///c:/Projects/LDR/DATABASE_SCHEMA.md) — Complete Firestore document and collection models.
+- [CHANGELOG.md](file:///c:/Projects/LDR/CHANGELOG.md) — Version and release history.
+
+---
+
+## 🛡️ Security & Privacy Notice
+
+Togetherly enforces end-to-end relationship isolation:
+- Couple data is accessible exclusively to the two paired members.
+- Simultaneous answers remain strictly double-blind until both submit.
+- Scores, XP, winners, and streaks are server-authoritative.
+- Passwords, authentication tokens, private guesses, and PII are never logged.

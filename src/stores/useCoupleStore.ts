@@ -4,6 +4,7 @@
 import { create } from 'zustand';
 import { CoupleProfile, CoupleInvitation, UserProfile } from '@/types';
 import { CoupleService } from '@/services/firebase/coupleService';
+import { runtimeMode } from '@/services/firebase/config';
 
 interface CoupleState {
   couple: CoupleProfile | null;
@@ -20,8 +21,8 @@ interface CoupleState {
   clearError: () => void;
 }
 
-export const useCoupleStore = create<CoupleState>((set) => ({
-  couple: CoupleService.getMockCurrentCouple(),
+export const useCoupleStore = create<CoupleState>((set, get) => ({
+  couple: runtimeMode === 'mock' ? CoupleService.getMockCurrentCouple() : null,
   activeInvitation: null,
   isLoading: false,
   error: null,
@@ -62,36 +63,36 @@ export const useCoupleStore = create<CoupleState>((set) => ({
 
   disconnect: async () => {
     set({ isLoading: true });
-    await CoupleService.disconnectCouple();
+    const couple = get().couple;
+    await CoupleService.disconnectCouple(couple?.id);
     set({ couple: null, isLoading: false });
   },
 
   updateSharedXP: (newXP: number, newLevel: number) => {
-    set((state) => {
-      if (!state.couple) return state;
-      return {
+    const current = get().couple;
+    if (current) {
+      set({
         couple: {
-          ...state.couple,
+          ...current,
           sharedXP: newXP,
           coupleLevel: newLevel,
         },
-      };
-    });
+      });
+    }
   },
 
   updateStreak: (streakData: any) => {
-    set((state) => {
-      if (!state.couple) return state;
-      return {
+    const current = get().couple;
+    if (current) {
+      set({
         couple: {
-          ...state.couple,
+          ...current,
           streakData,
         },
-      };
-    });
+      });
+    }
   },
 
   setCouple: (couple) => set({ couple }),
   clearError: () => set({ error: null }),
 }));
-

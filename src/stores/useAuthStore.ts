@@ -4,6 +4,7 @@
 import { create } from 'zustand';
 import { UserProfile } from '@/types';
 import { AuthService } from '@/services/firebase/authService';
+import { runtimeMode } from '@/services/firebase/config';
 
 interface AuthState {
   user: UserProfile | null;
@@ -12,6 +13,7 @@ interface AuthState {
   setUser: (user: UserProfile | null) => void;
   login: (email: string, pass: string) => Promise<UserProfile>;
   register: (email: string, pass: string, name: string) => Promise<UserProfile>;
+  restoreSession: () => Promise<UserProfile | null>;
   logout: () => Promise<void>;
   updateAvatar: (avatarId: string) => Promise<void>;
   updatePreferences: (prefs: Partial<UserProfile['preferences']>) => Promise<void>;
@@ -19,7 +21,7 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user: AuthService.getMockCurrentUser(),
+  user: runtimeMode === 'mock' ? AuthService.getMockCurrentUser() : null,
   isLoading: false,
   error: null,
 
@@ -46,6 +48,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (err: any) {
       set({ error: err.message || 'Registration failed', isLoading: false });
       throw err;
+    }
+  },
+
+  restoreSession: async () => {
+    try {
+      const user = await AuthService.restoreSession();
+      set({ user });
+      return user;
+    } catch (err) {
+      console.warn('[useAuthStore] Failed to restore session:', err);
+      return null;
     }
   },
 
@@ -81,4 +94,3 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearError: () => set({ error: null }),
 }));
-

@@ -2,7 +2,8 @@
  * TOGETHERLY — AUTHENTICATION SERVICE
  *
  * Supports email/password registration, login, logout, password reset,
- * and profile updates with live Firebase Auth or deterministic offline mock.
+ * and profile updates with live Firebase Auth + Firestore user persistence,
+ * or deterministic offline mock mode.
  */
 import { 
   signInWithEmailAndPassword, 
@@ -11,7 +12,8 @@ import {
   sendPasswordResetEmail,
   updateProfile,
 } from 'firebase/auth';
-import { auth, isFirebaseConfigured } from './config';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db, isFirebaseConfigured, runtimeMode } from './config';
 import { UserProfile, UserPreferences } from '@/types';
 
 // In-memory mock store for offline testing and fast local preview
@@ -27,6 +29,10 @@ let mockUser: UserProfile | null = {
   fcmTokens: [],
   preferences: {
     notificationsEnabled: true,
+    notifyTurnReady: true,
+    notifyDailyChallenge: true,
+    notifyAchievements: true,
+    notifyStreakReminder: true,
     soundEnabled: true,
     hapticsEnabled: true,
     matureContentAllowed: false,
@@ -35,10 +41,14 @@ let mockUser: UserProfile | null = {
 };
 
 export const AuthService = {
+  /**
+   * Registers a new user account with Firebase Auth and persists profile in Firestore.
+   */
   async register(email: string, password: string, displayName: string): Promise<UserProfile> {
-    if (isFirebaseConfigured && auth) {
+    if (isFirebaseConfigured && auth && db) {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName });
+
       const profile: UserProfile = {
         uid: cred.user.uid,
         email: cred.user.email,
@@ -51,12 +61,25 @@ export const AuthService = {
         fcmTokens: [],
         preferences: {
           notificationsEnabled: true,
+          notifyTurnReady: true,
+          notifyDailyChallenge: true,
+          notifyAchievements: true,
+          notifyStreakReminder: true,
           soundEnabled: true,
           hapticsEnabled: true,
           matureContentAllowed: false,
           theme: 'light',
         },
       };
+
+      // Persist user record in Firestore
+      const userRef = doc(db, 'users', cred.user.uid);
+      await setDoc(userRef, {
+        ...profile,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
       return profile;
     }
 
@@ -73,6 +96,10 @@ export const AuthService = {
       fcmTokens: [],
       preferences: {
         notificationsEnabled: true,
+        notifyTurnReady: true,
+        notifyDailyChallenge: true,
+        notifyAchievements: true,
+        notifyStreakReminder: true,
         soundEnabled: true,
         hapticsEnabled: true,
         matureContentAllowed: false,
@@ -82,10 +109,44 @@ export const AuthService = {
     return mockUser;
   },
 
+  /**
+   * Signs in an existing user and retrieves their authoritative profile from Firestore.
+   */
   async login(email: string, password: string): Promise<UserProfile> {
-    if (isFirebaseConfigured && auth) {
+    if (isFirebaseConfigured && auth && db) {
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      const profile: UserProfile = {
+      const userRef = doc(db, 'users', cred.user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        return {
+          ...data,
+          uid: cred.user.uid,
+          email: cred.user.email,
+          displayName: data.displayName || cred.user.displayName || 'Player',
+          avatarId: data.avatarId || 'avatar_bear',
+          activeCoupleId: data.activeCoupleId || null,
+          accountStatus: data.accountStatus || 'active',
+          fcmTokens: data.fcmTokens || [],
+          preferences: data.preferences || {
+            notificationsEnabled: true,
+            notifyTurnReady: true,
+            notifyDailyChallenge: true,
+            notifyAchievements: true,
+            notifyStreakReminder: true,
+            soundEnabled: true,
+            hapticsEnabled: true,
+            matureContentAllowed: false,
+            theme: 'light',
+          },
+          createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : Date.now(),
+          updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : Date.now(),
+        } as UserProfile;
+      }
+
+      // If document does not exist yet, initialize it
+      const fallbackProfile: UserProfile = {
         uid: cred.user.uid,
         email: cred.user.email,
         displayName: cred.user.displayName || 'Player',
@@ -97,13 +158,24 @@ export const AuthService = {
         fcmTokens: [],
         preferences: {
           notificationsEnabled: true,
+          notifyTurnReady: true,
+          notifyDailyChallenge: true,
+          notifyAchievements: true,
+          notifyStreakReminder: true,
           soundEnabled: true,
           hapticsEnabled: true,
           matureContentAllowed: false,
           theme: 'light',
         },
       };
-      return profile;
+
+      await setDoc(userRef, {
+        ...fallbackProfile,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      return fallbackProfile;
     }
 
     // Mock mode returns current or default mock user
@@ -120,6 +192,10 @@ export const AuthService = {
         fcmTokens: [],
         preferences: {
           notificationsEnabled: true,
+          notifyTurnReady: true,
+          notifyDailyChallenge: true,
+          notifyAchievements: true,
+          notifyStreakReminder: true,
           soundEnabled: true,
           hapticsEnabled: true,
           matureContentAllowed: false,
@@ -128,6 +204,48 @@ export const AuthService = {
       };
     }
     return mockUser;
+  },
+
+  /**
+   * Restores existing session from Firebase Auth and hydrates profile from Firestore.
+   */
+  async restoreSession(): Promise<UserProfile | null> {
+    if (isFirebaseConfigured && auth && db) {
+      const currentUser = auth.currentUser;
+      if (!currentUser) return null;
+
+      const userRef = doc(db, 'users', currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        return {
+          ...data,
+          uid: currentUser.uid,
+          email: currentUser.email,
+          displayName: data.displayName || currentUser.displayName || 'Player',
+          avatarId: data.avatarId || 'avatar_bear',
+          activeCoupleId: data.activeCoupleId || null,
+          accountStatus: data.accountStatus || 'active',
+          fcmTokens: data.fcmTokens || [],
+          preferences: data.preferences || {
+            notificationsEnabled: true,
+            notifyTurnReady: true,
+            notifyDailyChallenge: true,
+            notifyAchievements: true,
+            notifyStreakReminder: true,
+            soundEnabled: true,
+            hapticsEnabled: true,
+            matureContentAllowed: false,
+            theme: 'light',
+          },
+          createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : Date.now(),
+          updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : Date.now(),
+        } as UserProfile;
+      }
+      return null;
+    }
+
+    return runtimeMode === 'mock' ? mockUser : null;
   },
 
   async logout(): Promise<void> {
@@ -141,27 +259,29 @@ export const AuthService = {
     if (isFirebaseConfigured && auth) {
       await sendPasswordResetEmail(auth, email);
     }
-    // In mock mode, resolve successfully
     return Promise.resolve();
   },
 
   async updateAvatar(avatarId: string): Promise<void> {
+    if (isFirebaseConfigured && auth?.currentUser && db) {
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      await updateDoc(userRef, {
+        avatarId,
+        updatedAt: serverTimestamp(),
+      });
+    }
     if (mockUser) {
       mockUser.avatarId = avatarId;
     }
   },
 
   async updatePreferences(preferences: Partial<UserPreferences>): Promise<void> {
-    if (isFirebaseConfigured && auth && auth.currentUser) {
-      const { db } = await import('./config');
-      if (db) {
-        const { doc, updateDoc, serverTimestamp } = await import('firebase/firestore');
-        const userRef = doc(db, 'users', auth.currentUser.uid);
-        await updateDoc(userRef, {
-          preferences,
-          updatedAt: serverTimestamp(),
-        });
-      }
+    if (isFirebaseConfigured && auth?.currentUser && db) {
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      await updateDoc(userRef, {
+        preferences,
+        updatedAt: serverTimestamp(),
+      });
     }
     if (mockUser) {
       mockUser.preferences = {
@@ -175,4 +295,3 @@ export const AuthService = {
     return mockUser;
   },
 };
-

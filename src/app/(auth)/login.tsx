@@ -19,6 +19,7 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { AppButton } from '@/components/common/AppButton';
 import { AppTextInput } from '@/components/common/AppTextInput';
 import { LoginSchema } from '@/types';
+import { runtimeMode } from '@/services/firebase/config';
 import { Heart } from 'lucide-react-native';
 
 export default function LoginScreen() {
@@ -217,35 +218,37 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          {/* Fast Developer & Reviewer Quick Test Panel */}
-          <View style={styles.demoSection}>
-            <Text style={[styles.demoLabel, { color: theme.colors.textMuted }]}>
-              DEV PREVIEW: INSTANT SWITCH
-            </Text>
-            <View style={styles.demoButtonsRow}>
+          {/* Fast Developer & Reviewer Quick Test Panel (Hidden in Production / Pilot) */}
+          {runtimeMode === 'mock' && (
+            <View style={styles.demoSection}>
+              <Text style={[styles.demoLabel, { color: theme.colors.textMuted }]}>
+                DEV PREVIEW: INSTANT SWITCH
+              </Text>
+              <View style={styles.demoButtonsRow}>
+                <AppButton
+                  title="Sign in as Alex"
+                  onPress={() => handleDemoSignIn('host')}
+                  variant="outline"
+                  size="sm"
+                  style={{ flex: 1, marginRight: 8 }}
+                />
+                <AppButton
+                  title="Sign in as Sam"
+                  onPress={() => handleDemoSignIn('partner')}
+                  variant="outline"
+                  size="sm"
+                  style={{ flex: 1 }}
+                />
+              </View>
               <AppButton
-                title="Sign in as Alex"
-                onPress={() => handleDemoSignIn('host')}
-                variant="outline"
+                title="Test Unpaired Onboarding Flow"
+                onPress={handleUnpairedDemo}
+                variant="ghost"
                 size="sm"
-                style={{ flex: 1, marginRight: 8 }}
-              />
-              <AppButton
-                title="Sign in as Sam"
-                onPress={() => handleDemoSignIn('partner')}
-                variant="outline"
-                size="sm"
-                style={{ flex: 1 }}
+                style={{ marginTop: 6 }}
               />
             </View>
-            <AppButton
-              title="Test Unpaired Onboarding Flow"
-              onPress={handleUnpairedDemo}
-              variant="ghost"
-              size="sm"
-              style={{ marginTop: 6 }}
-            />
-          </View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
