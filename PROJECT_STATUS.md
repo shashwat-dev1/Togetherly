@@ -1,0 +1,37 @@
+# Togetherly — Project Status & System Dashboard
+
+**Product Name:** Togetherly  
+**Tagline:** Two people. One little world.  
+**Category:** Couples Gaming / Social Entertainment / Lifestyle  
+**Current Milestone:** Phase 0 & Phase 1 Complete (Foundation & Functional App Foundation)  
+**Last Updated:** November 2026  
+
+---
+
+## 1. Executive Summary
+
+Togetherly is an Android-first, production-oriented private couples gaming ecosystem. It connects pairs through real-time and asynchronous games, relationship quizzes, daily challenges, and shared achievements, wrapped in an elegant, warm, romantic and mature aesthetic.
+
+---
+
+## 2. Phase Tracker & Milestone Status
+
+| Phase | Milestone Description | Target | Status |
+|---|---|---|---|
+| **Phase 0** | **Project Foundation:** Expo SDK 58, TypeScript strict mode, design token system, Firebase architecture, core documentation, testing framework | Week 1 | 🟢 Complete |
+| **Phase 1** | **Functional Application Foundation:** Firebase Auth, User Profiles, Couple Pairing via atomic codes & deep links, 5-Tab Navigation, Onboarding | Week 2 | 🟢 Complete |
+| **Phase 2** | **Multiplayer Game Engine:** Universal session lifecycle, Real-time + Turn-based + Simultaneous modes, server validation, reconnection | Week 3 | 🟡 Next Up |
+| **Phase 3** | **First 4 Playable Games:** *Who Knows Whom Better?*, *This or That*, *Tic-Tac-Toe*, *Rock Paper Scissors* | Week 4 | ⚪ Planned |
+| **Phase 4** | **Remaining 6 Games:** *Truth or Dare*, *Couple Trivia*, *Draw & Guess*, *Connect Four*, *Memory Match*, *Word Guess* | Week 5 | ⚪ Planned |
+| **Phase 5** | **Engagement Systems:** Daily Challenge engine, Shared XP progression, Couple Achievements, FCM push notifications | Week 6 | ⚪ Planned |
+| **Phase 6** | **Monetisation Architecture:** Freemium rules, Play Billing / RevenueCat, AdMob integration (interstitial & rewarded) | Week 7 | ⚪ Planned |
+| **Phase 7** | **Quality Assurance & Security:** Penetration audit, Security rules test, low-end device benchmarks, crash testing | Week 8 | ⚪ Planned |
+| **Phase 8** | **Google Play Release Preparation:** Signed AAB, Data Safety disclosures, Store assets, closed testing | Week 9 | ⚪ Planned |
+
+---
+
+## 3. Verified Quality Gates
+
+- **Lint:** Clean pass (`npx expo lint` -> 0 errors, 0 warnings).
+- **TypeScript:** Strict typecheck clean pass (`npx tsc --noEmit` -> 0 errors).
+- **Unit & Integration Tests:** 17 tests passed (`npm test` -> 100% pass rate).
