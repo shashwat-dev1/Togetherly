@@ -8,15 +8,27 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+.eas/
 
-# Native
+# Native & Signing Keys
 .kotlin/
 *.orig.*
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key
+*.pem
 *.mobileprovision
+
+# Firebase & Google Services Secrets
+google-services.json
+GoogleService-Info.plist
+*serviceAccountKey*.json
+*service-account*.json
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
 
 # Metro
 .metro-health-check*
@@ -28,11 +40,12 @@ yarn-error.*
 
 # macOS
 .DS_Store
-*.pem
 
 # local env files
 .env
-.env*.local
+.env.*
+!.env.example
+*.local
 
 # typescript
 *.tsbuildinfo
