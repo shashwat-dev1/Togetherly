@@ -77,7 +77,9 @@ npm run deploy:spark
 ### Step 4: Build Standalone Pilot Android APK
 Build the standalone APK for installation on the pilot testers' Android devices:
 ```bash
-npx eas build --profile pilot --platform android
+npm run build:pilot
+# Or directly:
+npx eas-cli build --profile pilot --platform android
 ```
 
 #### What EAS Build does:

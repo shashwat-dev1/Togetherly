@@ -54,7 +54,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest",
-    "deploy:spark": "firebase deploy --only firestore:rules,firestore:indexes"
+    "deploy:spark": "firebase deploy --only firestore:rules,firestore:indexes",
+    "build:pilot": "npx eas-cli build --profile pilot --platform android"
   },
   "private": true
 }

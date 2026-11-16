@@ -109,14 +109,10 @@ npm run deploy:spark
 For internal pilot distribution to 5–6 couples without Google Play:
 
 ```bash
-# Install EAS CLI
-npm install -g eas-cli
-
-# Log in to your Expo account
-eas login
-
-# Build a standalone installable APK
-eas build --profile pilot --platform android
+# Build standalone APK via EAS Cloud Build
+npm run build:pilot
+# Or directly:
+npx eas-cli build --profile pilot --platform android
 ```
 The resulting `.apk` file can be downloaded from Expo and sideloaded directly onto any Android device. See [SPARK_DEPLOYMENT_GUIDE.md](file:///c:/Projects/LDR/SPARK_DEPLOYMENT_GUIDE.md) for complete instructions.
 
