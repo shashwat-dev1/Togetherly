@@ -23,12 +23,12 @@ The table below provides an exact, transparent status for each dimension of the 
 | **5. Google Sign-In** | Incomplete | 🔴 Not Yet Verified | Enabled in Console; awaiting SHA-1/SHA-256 fingerprints from EAS keystore. Email/Password is primary. |
 | **6. Firestore Security Rules** | Complete | 🟢 Configured | Strict isolation by UID and couple membership; double-blind secret rules enforced. |
 | **7. Firestore Composite Indexes** | Complete | 🟢 Configured | Composite indexes defined in `firestore.indexes.json` for `gameSessions`, `invitations`, `xpTransactions`. |
-| **8. Cloud Functions Build** | Complete | 🟢 Tested Automatically | Compiled with 0 errors via TypeScript (`npm --prefix functions run build`). |
-| **9. Cloud Functions Deployment** | Staged | 🟡 Pending Operator Action | Functions staged; deployment requires operator approval of Blaze billing plan. |
+| **8. Cloud Functions Build** | Preserved | 🟢 Tested Automatically | Compiled with 0 errors via TypeScript (`npm --prefix functions run build`). Code retained for history. |
+| **9. Cloud Functions Deployment** | Excluded | 🟢 Zero Dependency (Spark) | Functions deployment excluded. App migrated to 100% Spark-compatible client Firestore architecture. |
 | **10. Real-Time Pairing** | Complete | 🟢 Tested Automatically | Atomic 6-character invitation creation and redemption; `onSnapshot` real-time transition. |
 | **11. Real-Time Game Sync** | Complete | 🟢 Tested Automatically | Universal `gameSessionService` powering all 10 games with real-time `onSnapshot` listeners. |
 | **12. Android APK Build Readiness** | Complete | 🟢 Configured | `eas.json` configured with standalone `pilot` APK profile and internal distribution. |
-| **13. Automated Test Suite** | Complete | 🟢 Tested Automatically | 65 automated tests passing across 5 test suites (`npm test`). |
+| **13. Automated Test Suite** | Complete | 🟢 Tested Automatically | 72 automated tests passing across 6 test suites (`npm test`). |
 | **14. GitHub Remote Sync** | Up-to-date | 🟢 Deployed to Git | Preserved git history; pushed to `https://github.com/shashwat-dev1/Togetherly.git`. |
 | **15. Manual Firebase Steps** | Documented | 🟡 Actionable Guide Ready | Web App registration and SHA fingerprints documented in step-by-step guides. |
 | **16. Operator Next Commands** | Defined | 🟢 Documented | Exact CLI commands provided for deployment and APK generation. |
@@ -114,7 +114,7 @@ Before distributing the pilot APK to friends and relatives, perform these 3 step
 
 ## 5. Exact Next Commands for Operator
 
-### Phase 1: Deploy Firebase Backend
+### Phase 1: Deploy Firebase Spark Backend (100% Free / Zero Billing)
 ```bash
 # 1. Login to Firebase CLI
 firebase login
@@ -123,12 +123,9 @@ firebase login
 firebase use togetherly-17397
 
 # 3. Deploy Security Rules and Composite Indexes (100% Free)
-firebase deploy --only firestore:rules,firestore:indexes
-
-# 4. Build and Deploy Cloud Functions (Requires Blaze Plan)
-npm --prefix functions run build
-firebase deploy --only functions
+npm run deploy:spark
 ```
+*(No Cloud Functions deployment required. Project remains 100% on Spark).*
 
 ### Phase 2: Build Standalone Pilot Android APK
 ```bash
@@ -139,3 +136,4 @@ npx eas build --profile pilot --platform android
 
 ### Phase 3: Execute Two-Device Multiplayer Verification
 Follow the step-by-step procedures in [REALTIME_TEST_PLAN.md](file:///c:/Projects/LDR/REALTIME_TEST_PLAN.md) and record test outcomes in [PILOT_TESTING_CHECKLIST.md](file:///c:/Projects/LDR/PILOT_TESTING_CHECKLIST.md).
+

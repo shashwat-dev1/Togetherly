@@ -146,17 +146,16 @@ While `apiKey`, `projectId`, `storageBucket`, and `messagingSenderId` can be der
 
 ---
 
-## 7. Cloud Functions Status
+## 7. Cloud Functions Status (Spark-Only Operating Model)
 
-- **Location**: `functions/src/index.ts`
-- **Compiler**: TypeScript (`npm --prefix functions run build`)
-- **Compilation Result**: 🟢 0 errors.
-- **Exported Functions**:
-  1. `validateAndApplyAction`: Turn-based validation, server win check, scoring, and action logging.
-  2. `onPrivateAnswerWritten`: Firestore background trigger executing double-blind reveal when both partners submit.
-  3. `onNotificationCreated`: Dispatches high-priority Android FCM notifications for turns and milestones.
-- **Billing Notice**: Cloud Functions deployment requires the Firebase Blaze (Pay-as-you-go) plan. Usage for 5–6 couples is completely free under Firebase's monthly free tier (2,000,000 invocations free per month).
-- **Client Resilience**: `gameSessionService.ts` contains full direct Firestore fallback support, meaning physical devices can play games even prior to Cloud Functions deployment!
+- **Operating Policy**: The owner explicitly mandates operating 100% on the **Firebase Spark (Free) Plan** without billing or credit cards.
+- **Functions Deployment Status**: **EXCLUDED & NOT DEPLOYED**.
+- **Source Code Status**: Preserved in `functions/src/index.ts` for historical record; compiles cleanly with 0 errors via TypeScript.
+- **Spark Migration**:
+  - `validateAndApplyAction` $\rightarrow$ Replaced by client-side Firestore action engine in `GameSessionService.submitGameAction`.
+  - `onPrivateAnswerWritten` $\rightarrow$ Replaced by client-side double-blind reveal engine in `GameSessionService.submitSimultaneousAnswer` guarded by Firestore Security Rules.
+  - `onNotificationCreated` $\rightarrow$ Push notifications requiring a server are deferred; real-time in-app synchronization via `onSnapshot` handles all live gameplay.
+- **Zero Runtime Dependency**: No runtime client code path calls or depends on Cloud Functions.
 
 ---
 
@@ -168,7 +167,8 @@ While `apiKey`, `projectId`, `storageBucket`, and `messagingSenderId` can be der
 | Manifest Config | `app.json` contains package and `googleServicesFile` | 🟢 PASS |
 | CLI Setup | `.firebaserc` created with default project alias | 🟢 PASS |
 | Git Protection | `.gitignore` ignores `.env`, credentials, keystores | 🟢 PASS |
-| Automated Tests | 65 automated tests passing across 5 suites | 🟢 PASS |
+| Automated Tests | 72 automated tests passing across 6 suites | 🟢 PASS |
 | Type Safety | Strict TypeScript check (`npx tsc --noEmit`) | 🟢 PASS |
 | Linting | Expo lint clean (`npx expo lint`) | 🟢 PASS |
-| Functions Build | Cloud Functions compile clean (`npm --prefix functions run build`) | 🟢 PASS |
+| Spark Compatibility | All 10 games operable without Cloud Functions | 🟢 PASS |
+

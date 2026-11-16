@@ -479,20 +479,49 @@ export const GameSessionService = {
 
     const partnerId = session.playerIds.find((id) => id !== playerId) || '';
 
-    // Record submission into private store
-    let answersForSession = mockPrivateAnswers.get(sessionId);
-    if (!answersForSession) {
-      answersForSession = new Map();
-      mockPrivateAnswers.set(sessionId, answersForSession);
+    let partnerAnswer: any = undefined;
+    let bothSubmitted = false;
+    let answersForSession: Map<string, any> | undefined = undefined;
+
+    if (runtimeMode === 'production' || runtimeMode === 'emulator') {
+      if (!db) throw new Error('Firestore is not initialized');
+      const privateRef = doc(db, 'gameSessions', sessionId, 'privateAnswers', `${playerId}_r${round}`);
+      // 1. Commit caller's immutable answer to privateAnswers
+      await setDoc(privateRef, {
+        playerId,
+        round,
+        answer,
+        submittedAt: serverTimestamp(),
+      });
+
+      // 2. Check if partner has already committed their answer for this round
+      try {
+        const partnerRef = doc(db, 'gameSessions', sessionId, 'privateAnswers', `${partnerId}_r${round}`);
+        const partnerSnap = await getDoc(partnerRef);
+        if (partnerSnap.exists()) {
+          partnerAnswer = partnerSnap.data()?.answer;
+          bothSubmitted = partnerAnswer !== undefined;
+        }
+      } catch {
+        partnerAnswer = undefined;
+        bothSubmitted = false;
+      }
+    } else {
+      // Record submission into mock private store
+      answersForSession = mockPrivateAnswers.get(sessionId);
+      if (!answersForSession) {
+        answersForSession = new Map();
+        mockPrivateAnswers.set(sessionId, answersForSession);
+      }
+
+      const playerKey = `${playerId}_r${round}`;
+      const partnerKey = `${partnerId}_r${round}`;
+
+      answersForSession.set(playerKey, answer);
+
+      partnerAnswer = answersForSession.get(partnerKey);
+      bothSubmitted = partnerAnswer !== undefined;
     }
-
-    const playerKey = `${playerId}_r${round}`;
-    const partnerKey = `${partnerId}_r${round}`;
-
-    answersForSession.set(playerKey, answer);
-
-    const partnerAnswer = answersForSession.get(partnerKey);
-    const bothSubmitted = partnerAnswer !== undefined;
 
     let updatedSession = { ...session };
     let revealedRoundResult: any = null;
@@ -509,8 +538,16 @@ export const GameSessionService = {
       // BOTH SUBMITTED: Reveal and calculate round scores!
       const player1Id = session.playerIds[0];
       const player2Id = session.playerIds[1];
-      const ans1 = answersForSession.get(`${player1Id}_r${round}`);
-      const ans2 = answersForSession.get(`${player2Id}_r${round}`);
+      let ans1: any;
+      let ans2: any;
+
+      if (runtimeMode === 'production' || runtimeMode === 'emulator') {
+        ans1 = playerId === player1Id ? answer : partnerAnswer;
+        ans2 = playerId === player2Id ? answer : partnerAnswer;
+      } else {
+        ans1 = answersForSession!.get(`${player1Id}_r${round}`);
+        ans2 = answersForSession!.get(`${player2Id}_r${round}`);
+      }
 
       const nextScores = { ...session.scores };
       let roundMatch = false;
@@ -620,13 +657,6 @@ export const GameSessionService = {
     if (runtimeMode === 'production' || runtimeMode === 'emulator') {
       if (!db) throw new Error('Firestore is not initialized');
       const sessionRef = doc(db, 'gameSessions', sessionId);
-      const privateRef = doc(db, 'gameSessions', sessionId, 'privateAnswers', `${playerId}_r${round}`);
-      await setDoc(privateRef, {
-        playerId,
-        round,
-        answer,
-        submittedAt: serverTimestamp(),
-      });
       await updateDoc(sessionRef, {
         scores: updatedSession.scores,
         gameState: updatedSession.gameState,

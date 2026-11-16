@@ -53,7 +53,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "jest"
+    "test": "jest",
+    "deploy:spark": "firebase deploy --only firestore:rules,firestore:indexes"
   },
   "private": true
 }

@@ -153,3 +153,4 @@ If a deployed function exhibits runtime exceptions:
    ```bash
    firebase functions:delete <functionName> --region us-central1
    ```
+

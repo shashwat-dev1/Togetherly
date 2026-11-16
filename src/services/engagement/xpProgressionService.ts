@@ -10,7 +10,6 @@ import {
   doc,
   getDoc,
   updateDoc,
-  collection,
   setDoc,
   serverTimestamp,
 } from 'firebase/firestore';
@@ -124,6 +123,20 @@ export const XPProgressionService = {
       const currentXP = coupleData.sharedXP || 0;
       const currentLevel = coupleData.coupleLevel || 1;
 
+      // Idempotency check: prevent duplicate awards for identical referenceId
+      const txDocId = referenceId
+        ? `tx_${source}_${referenceId}`
+        : `tx_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const txRef = doc(db, 'couples', coupleId, 'xpTransactions', txDocId);
+      const existingTx = await getDoc(txRef);
+      if (existingTx.exists()) {
+        return {
+          newXP: currentXP,
+          newLevel: currentLevel,
+          leveledUp: false,
+        };
+      }
+
       const newXP = currentXP + amount;
       const newProgress = calculateLevelFromXP(newXP);
       const leveledUp = newProgress.level > currentLevel;
@@ -136,9 +149,8 @@ export const XPProgressionService = {
       });
 
       // Record transaction
-      const txRef = doc(collection(db, 'couples', coupleId, 'xpTransactions'));
       await setDoc(txRef, {
-        id: txRef.id,
+        id: txDocId,
         coupleId,
         source,
         referenceId,
@@ -160,6 +172,16 @@ export const XPProgressionService = {
     const mockCouple = CoupleService.getMockCurrentCouple();
     const currentXP = mockCouple?.sharedXP || 0;
     const currentLevel = mockCouple?.coupleLevel || 1;
+
+    // Idempotency check in mock mode
+    const existingList = mockXPTransactions.get(coupleId) || [];
+    if (referenceId && existingList.some((t) => t.referenceId === referenceId && t.source === source)) {
+      return {
+        newXP: currentXP,
+        newLevel: currentLevel,
+        leveledUp: false,
+      };
+    }
 
     const newXP = currentXP + amount;
     const newProgress = calculateLevelFromXP(newXP);
@@ -202,6 +224,10 @@ export const XPProgressionService = {
       return [];
     }
     return mockXPTransactions.get(coupleId) || [];
+  },
+
+  clearMockStore(): void {
+    mockXPTransactions.clear();
   },
 };
 

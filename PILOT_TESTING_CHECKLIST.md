@@ -15,7 +15,7 @@
 |---|---|---|---|
 | **TypeScript Typecheck** | `npx tsc --noEmit` | Clean exit with 0 errors | 🟢 PASS |
 | **Expo Linter** | `npx expo lint` | Clean exit with 0 warnings/errors | 🟢 PASS |
-| **Jest Automated Test Suite** | `npm test` | 65 passing tests across 5 suites | 🟢 PASS |
+| **Jest Automated Test Suite** | `npm test` | 72 passing tests across 6 suites | 🟢 PASS |
 | **Cloud Functions Compilation** | `npm --prefix functions run build` | Clean TypeScript build | 🟢 PASS |
 | **Secrets & Credentials Safety** | `git status` | `.env` and `google-services.json` ignored | 🟢 PASS |
 | **EAS Build Configuration** | `eas.json` | Standalone APK `pilot` profile ready | 🟢 PASS |

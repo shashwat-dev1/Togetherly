@@ -5,9 +5,9 @@ An Android-first, private multiplayer gaming platform designed exclusively for c
 [![Git Remote](https://img.shields.io/badge/GitHub-Togetherly-purple?logo=github)](https://github.com/shashwat-dev1/Togetherly)
 [![Expo SDK](https://img.shields.io/badge/Expo-SDK%2058-blue?logo=expo)](https://expo.dev)
 [![React Native](https://img.shields.io/badge/React%20Native-0.88-61DAFB?logo=react)](https://reactnative.dev)
-[![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore%20%7C%20Functions-orange?logo=firebase)](https://firebase.google.com)
+[![Firebase](https://img.shields.io/badge/Firebase-Spark%20(Free%20Plan)-orange?logo=firebase)](https://firebase.google.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20Mode-blue?logo=typescript)](https://www.typescriptlang.org)
-[![Testing](https://img.shields.io/badge/Tests-65%20Passed%20(100%25)-brightgreen)]()
+[![Testing](https://img.shields.io/badge/Tests-72%20Passed%20(100%25)-brightgreen)]()
 
 ---
 
@@ -44,8 +44,8 @@ It is a private, shared digital living room for two people.
 - **Client:** React Native (0.88.1), Expo SDK 58, Expo Router, TypeScript (Strict Mode).
 - **State & Validation:** Zustand, Zod schemas, TanStack Query.
 - **Styling & UI:** Semantic design token palette (`src/constants/tokens.ts`), Lucide Icons, React Native SVG.
-- **Backend:** Firebase Auth, Cloud Firestore (WebSockets real-time listeners), Cloud Functions (TypeScript v1), Firebase Cloud Messaging.
-- **Security:** Strict Firestore rules, server-authoritative scoring, private answer isolation, and idempotency guarantees.
+- **Backend:** Firebase Auth, Cloud Firestore (WebSockets real-time listeners), Firebase Spark Plan (100% Free / Zero Cloud Functions).
+- **Security:** Strict Firestore rules, double-blind secret isolation, deterministic idempotency, and protected feedback.
 
 ---
 
@@ -89,7 +89,7 @@ Press `a` in the terminal to open on an Android emulator or scan the QR code wit
 Run the automated test suite and strict typechecks:
 
 ```bash
-# Run 65 automated unit, integration, and security tests
+# Run 72 automated unit, integration, and Spark compatibility tests
 npm test
 
 # Run strict TypeScript check (0 errors)
@@ -98,8 +98,8 @@ npx tsc --noEmit
 # Run Expo / React Compiler linter (0 errors, 0 warnings)
 npx expo lint
 
-# Build Cloud Functions
-npm --prefix functions run build
+# Deploy Firestore Security Rules & Indexes to Spark (100% Free)
+npm run deploy:spark
 ```
 
 ---
@@ -118,20 +118,20 @@ eas login
 # Build a standalone installable APK
 eas build --profile pilot --platform android
 ```
-The resulting `.apk` file can be downloaded from Expo and sideloaded directly onto any Android device. See [PILOT_DEPLOYMENT_GUIDE.md](file:///c:/Projects/LDR/PILOT_DEPLOYMENT_GUIDE.md) for complete instructions.
+The resulting `.apk` file can be downloaded from Expo and sideloaded directly onto any Android device. See [SPARK_DEPLOYMENT_GUIDE.md](file:///c:/Projects/LDR/SPARK_DEPLOYMENT_GUIDE.md) for complete instructions.
 
 ---
 
 ## 📚 Pilot Documentation Directory
 
-- [PILOT_READINESS_AUDIT.md](file:///c:/Projects/LDR/PILOT_READINESS_AUDIT.md) — Architectural and security audit of the pilot release.
-- [PILOT_DEPLOYMENT_GUIDE.md](file:///c:/Projects/LDR/PILOT_DEPLOYMENT_GUIDE.md) — Step-by-step instructions for Firebase deployment, rules, and APK distribution.
-- [REALTIME_TEST_PLAN.md](file:///c:/Projects/LDR/REALTIME_TEST_PLAN.md) — 10-point cross-device real-time sync verification plan.
-- [PILOT_TESTING_CHECKLIST.md](file:///c:/Projects/LDR/PILOT_TESTING_CHECKLIST.md) — Manual testing checklist for pilot operators.
-- [PILOT_FEEDBACK_GUIDE.md](file:///c:/Projects/LDR/PILOT_FEEDBACK_GUIDE.md) — Guide for testers on submitting in-app bug reports and suggestions.
-- [ENVIRONMENT_SETUP.md](file:///c:/Projects/LDR/ENVIRONMENT_SETUP.md) — Complete environment variable reference.
+- [SPARK_MIGRATION_AUDIT.md](file:///c:/Projects/LDR/SPARK_MIGRATION_AUDIT.md) — Comprehensive Cloud Function dependency audit & Spark migration map.
+- [SPARK_COST_AUDIT.md](file:///c:/Projects/LDR/SPARK_COST_AUDIT.md) — $0.00 infrastructure cost analysis & quota verification.
+- [SPARK_DEPLOYMENT_GUIDE.md](file:///c:/Projects/LDR/SPARK_DEPLOYMENT_GUIDE.md) — Step-by-step instructions for Firebase Spark rules deployment & APK build.
+- [PILOT_READINESS_REPORT.md](file:///c:/Projects/LDR/PILOT_READINESS_REPORT.md) — 16-dimension pilot readiness assessment.
+- [FIREBASE_CONFIGURATION_CHECK.md](file:///c:/Projects/LDR/FIREBASE_CONFIGURATION_CHECK.md) — Firebase configuration audit and Google Sign-In fingerprint guide.
+- [REALTIME_TEST_PLAN.md](file:///c:/Projects/LDR/REALTIME_TEST_PLAN.md) — Cross-device real-time sync verification plan.
+- [PILOT_TESTING_CHECKLIST.md](file:///c:/Projects/LDR/PILOT_TESTING_CHECKLIST.md) — Two-device physical testing scorecard.
 - [DATABASE_SCHEMA.md](file:///c:/Projects/LDR/DATABASE_SCHEMA.md) — Complete Firestore document and collection models.
-- [CHANGELOG.md](file:///c:/Projects/LDR/CHANGELOG.md) — Version and release history.
 
 ---
 
