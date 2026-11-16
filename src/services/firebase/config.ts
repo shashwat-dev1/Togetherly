@@ -59,6 +59,11 @@ export let pilotConfigError: string | null = null;
 
 // Determine the active runtime mode
 export function resolveRuntimeMode(): FirebaseRuntimeMode {
+  // Always use mock mode for automated test suites
+  if (process.env.NODE_ENV === 'test') {
+    return 'mock';
+  }
+
   if (isEmulatorExplicitlyRequested) {
     return 'emulator';
   }

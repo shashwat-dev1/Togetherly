@@ -179,3 +179,4 @@ When you fix bugs during the pilot:
    eas build --profile pilot --platform android
    ```
 4. Distribute the new APK download link to the pilot cohort. Testers can simply install the new APK over the existing installation to update without losing their account or couple pairing!
+

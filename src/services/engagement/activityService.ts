@@ -136,3 +136,4 @@ export const ActivityService = {
     return list.slice(0, maxItems);
   },
 };
+

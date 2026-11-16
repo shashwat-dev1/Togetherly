@@ -145,3 +145,4 @@ export const LoggingService = {
     diagnosticRingBuffer.length = 0;
   },
 };
+

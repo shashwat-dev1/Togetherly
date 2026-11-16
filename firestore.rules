@@ -35,11 +35,11 @@ service cloud.firestore {
     // 2. Couples Collection
     match /couples/{coupleId} {
       allow read: if isCoupleMember(coupleId);
-      // Client can only create new couple or update non-sensitive metadata
+      // Client can create new couple (when redeeming invite) or update couple state
       allow create: if isAuthenticated() && request.auth.uid in request.resource.data.memberIds;
       allow update: if isCoupleMember(coupleId) &&
-        // Prevent clients from directly editing sharedXP or coupleLevel
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['sharedXP', 'coupleLevel']);
+        // Prevent clients from altering couple ownership or member identities
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['memberIds', 'createdBy']);
       allow delete: if false; // Requires explicit account deletion workflow
 
       // Private Data Subcollection (Drafts, notes, unrevealed answers)
@@ -49,18 +49,23 @@ service cloud.firestore {
 
       // Daily Challenge Progress
       match /dailyChallengeProgress/{date} {
-        allow read: if isCoupleMember(coupleId);
-        allow write: if isCoupleMember(coupleId);
+        allow read, write: if isCoupleMember(coupleId);
       }
 
-      // Achievements
+      // Achievements Subcollection
       match /achievements/{achievementId} {
-        allow read: if isCoupleMember(coupleId);
-        allow write: if false; // Cloud Functions authority only
+        allow read, write: if isCoupleMember(coupleId);
       }
 
       // Activities Timeline Subcollection
       match /activities/{activityId} {
+        allow read: if isCoupleMember(coupleId);
+        allow create: if isCoupleMember(coupleId);
+        allow update, delete: if false;
+      }
+
+      // XP Transactions Subcollection (Couples audit trail)
+      match /xpTransactions/{txId} {
         allow read: if isCoupleMember(coupleId);
         allow create: if isCoupleMember(coupleId);
         allow update, delete: if false;
@@ -85,11 +90,10 @@ service cloud.firestore {
       allow read: if isAuthenticated() && request.auth.uid in resource.data.playerIds;
       allow create: if isAuthenticated() && request.auth.uid in request.resource.data.playerIds;
       
-      // Updates require player membership; score and winner manipulations blocked
+      // Updates require player membership; players cannot reassign session or alter membership
       allow update: if isAuthenticated() && 
         request.auth.uid in resource.data.playerIds &&
-        // Clients cannot self-declare scores, winners, or XP rewards
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['scores', 'winnerId', 'xpAwarded']);
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['playerIds', 'coupleId', 'createdBy']);
 
       // 4.1 Private Answers Subcollection (Double-Blind Secret Architecture)
       // Strictly denies the partner from reading answers before the server reveal!
@@ -109,10 +113,11 @@ service cloud.firestore {
       }
     }
 
-    // 5. XP Transactions Collection (Immutable Audit Trail)
+    // 5. XP Transactions Collection (Top-Level Immutable Audit Trail)
     match /xpTransactions/{transactionId} {
       allow read: if isAuthenticated() && isCoupleMember(resource.data.coupleId);
-      allow write: if false; // Only Cloud Functions (Admin SDK) can create XP transactions
+      allow create: if isAuthenticated() && isCoupleMember(request.resource.data.coupleId);
+      allow update, delete: if false;
     }
 
     // 6. Notifications Collection

@@ -58,3 +58,4 @@ All changes, hardening updates, and preparation deliverables for the closed pilo
 - `REALTIME_TEST_PLAN.md`: 10-point cross-network real-time multiplayer synchronization test plan.
 - `ENVIRONMENT_SETUP.md`: Comprehensive reference for all environment variables.
 - `README.md`: Upgraded from default template to full product, architecture, and pilot handbook.
+

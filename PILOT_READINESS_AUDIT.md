@@ -149,3 +149,4 @@ The project includes Firebase Cloud Functions v1 with strict TypeScript:
 3. **Phase C (Build & Permissions):** Add `eas.json` and configure Android permissions in `app.json`.
 4. **Phase D (Feedback & Observability):** Implement `FeedbackService`, in-app feedback modal, and `LoggingService`.
 5. **Phase E (Verification & Documentation):** Run full test suite, verify compilation, and publish pilot guides.
+

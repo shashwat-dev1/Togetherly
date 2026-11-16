@@ -96,3 +96,4 @@ To ensure zero risk of unexpected cost:
 2. Create a budget for project `togetherly-pilot`.
 3. Target amount: **$5.00 / month**.
 4. Set email triggers at **50% ($2.50)** and **100% ($5.00)**.
+

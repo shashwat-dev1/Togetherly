@@ -204,3 +204,4 @@ export const XPProgressionService = {
     return mockXPTransactions.get(coupleId) || [];
   },
 };
+

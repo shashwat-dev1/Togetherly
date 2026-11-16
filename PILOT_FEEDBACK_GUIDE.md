@@ -71,3 +71,4 @@ Only authorized administrators can access the submitted feedback.
 3. Select the `pilotFeedback` collection.
 4. Each document represents a tester submission, sorted by `createdAt`.
 5. Review the `category`, `description`, `gameId`, and `userDisplayName`.
+

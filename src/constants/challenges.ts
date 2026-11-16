@@ -1113,3 +1113,4 @@ export function getCurrentDateString(date: Date = new Date()): string {
   const d = String(date.getUTCDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+
