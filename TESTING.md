@@ -6,43 +6,71 @@ Every core component, game engine, and synchronization flow in Togetherly must b
 
 ---
 
-## 2. Test Suites & Categorization
+## 2. Automated Test Suites & Coverage
 
 ### 2.1 Unit Tests (`src/__tests__/unit/`)
-- **Game Logic:**
-  - *Who Knows Whom Better:* Scoring matrices, question evaluation.
-  - *Tic-Tac-Toe:* Row/column/diagonal win detection, full-board draw detection.
-  - *Rock Paper Scissors:* Tie, Rock > Scissors, Scissors > Paper, Paper > Rock, best-of-3 counter.
-  - *This or That:* Affinity score calculation: `(matches / total) * 100`.
-- **Validation Schemas:**
-  - Zod schemas for user profile, invitation code, game actions.
-- **Progression Math:**
-  - XP thresholds per level, streak date delta calculations.
+- `gameRules.test.ts`:
+  - Tic-Tac-Toe horizontal, diagonal, draw detection, in-progress checks.
+  - Rock Paper Scissors win matrix (Rock > Scissors, Paper > Rock, Scissors > Paper, Ties).
+  - This or That affinity percentage formula: `Math.round((matches / total) * 100)`.
+- `pairingAndValidation.test.ts`:
+  - Zod schemas for user registration, login, and 6-character invite codes.
+  - Invitation code generation (uppercase alphanumeric, length 6).
+  - 48-hour expiration calculations.
+  - Self-pairing prevention rejection.
+  - Atomic couple document creation.
 
 ### 2.2 Integration Tests (`src/__tests__/integration/`)
-- **Pairing Lifecycle:**
-  - Code generation -> Code hashing -> Redeem invitation -> Couple document creation.
-  - Expiration after 48 hours.
-  - Prevention of self-pairing or multi-couple memberships.
-- **Game Engine Synchronization:**
-  - State transitions: `waiting` -> `ready` -> `active` -> `completed`.
-  - Simultaneous submission: Answer A submitted, Answer B submitted -> reveal trigger.
-  - Disconnect recovery: resuming an existing `sessionId` without creating a duplicate.
+- `gameSessionService.test.ts`:
+  - `createGameSession`: Session initialized with `'waiting'` status.
+  - `joinGameSession`: Automatic transition to `'active'` when both players join.
+  - `submitGameAction`: Validates turn alternation, board state updates.
+  - Invalid turn rejection: Throws error if player attempts move out of turn.
+  - Double-blind secret submission: Verifies that answers remain private when only one player submits, and triggers atomic reveal & scoring once both submit.
+  - `requestRematch`: Creates a linked rematch session preserving match history.
+  - `reconnectToSession`: Recovers active session without resetting the board.
 
-### 2.3 Security Rules Tests (`functions/__tests__/firestore-rules/`)
-- Cloud Firestore emulator unit tests verifying that:
-  - User cannot read/write another couple's session.
-  - User cannot modify `sharedXP` directly without Cloud Functions.
-  - User cannot reveal `privateData/{partnerUid}` before the server publishes the round result.
+### 2.3 Security Tests (`src/__tests__/security/`)
+- `securityRules.test.ts`:
+  - Blocks unauthorized users outside the couple from joining sessions.
+  - Blocks unauthorized users from dispatching moves.
+  - Blocks unauthorized users from submitting simultaneous answers.
+  - Idempotency test: duplicate actions with the same `idempotencyKey` are discarded without repeating effects.
 
-### 2.4 End-to-End Simulation (Two-Account Testing)
-- Account A (Host) and Account B (Partner) run in isolated client environments.
-- Verify full loop:
-  1. Account A logs in & generates invitation code `TGT-789`.
-  2. Account B logs in & redeems code `TGT-789`.
-  3. Couple is created: both dashboards transition to `paired` state.
-  4. Account A selects *Who Knows Whom Better?*.
-  5. Account B sees real-time match invite in Activity tab.
-  6. Both submit answers; scores are revealed.
-  7. Shared XP increases for the couple.
+---
 
+## 3. Manual Two-Device Testing Guide
+
+To test real multiplayer between two independent accounts on two separate Android devices:
+
+### Step 1: Start the Development Server
+```bash
+npx expo start
+```
+
+### Step 2: Device A (Alex — Host)
+1. Launch Togetherly on Device A (or Android Emulator 1).
+2. On the Sign In screen, tap **"Sign in as Alex"** (or create an account with email/password).
+3. Go to the **Games** tab and select **"Tic-Tac-Toe"** (or **"Who Knows Whom Better?"**).
+4. Tap **"Invite Partner & Play"**.
+5. The session starts in the Lobby: *"Waiting for Sam to join..."* with status indicator.
+
+### Step 3: Device B (Sam — Partner)
+1. Launch Togetherly on Device B (or Android Emulator 2).
+2. On the Sign In screen, tap **"Sign in as Sam"** (or create partner account).
+3. Open the **Activity** tab.
+4. Tap **"Play Your Turn"** or navigate to the same game in the **Games** tab.
+5. The session status immediately transitions to **"LIVE SYNC (Active)"** on both devices simultaneously!
+
+### Step 4: Play & Verify
+- **For Tic-Tac-Toe:** Device A taps cell 0 (`❤️`). Device B instantly sees cell 0 filled with `❤️` and gets the turn prompt `Your Turn (⭐)`. Device B taps cell 4 (`⭐`). Both devices reflect the move in real time!
+- **For Who Knows Whom Better?:** Device A selects their answers and locks them in. Notice Device B does **NOT** see Device A's answers! Device B selects their answers. As soon as Device B submits, **both devices simultaneously reveal the side-by-side results!**
+- **For Rematch:** Tap **"Play Rematch"** on Device A. Device B's session immediately links to the new match!
+
+---
+
+## 4. Running the Test Suite
+```bash
+npm test
+```
+All 28 tests pass with zero failures.

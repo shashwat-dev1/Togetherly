@@ -112,11 +112,28 @@ export interface GameDefinition {
   rulesSummary: string;
 }
 
+export interface GameAction {
+  id: string;
+  playerId: string;
+  actionType: string;
+  payload: Record<string, any>;
+  idempotencyKey?: string;
+  serverTimestamp: number;
+}
+
+export interface PrivateSubmission {
+  playerId: string;
+  round: number;
+  encryptedOrSecretAnswer: any;
+  submittedAt: number;
+}
+
 export interface GameSession {
   id: string;
   coupleId: string;
   gameId: string;
   playerIds: [string, string];
+  readyPlayers: string[];
   status: GameSessionStatus;
   gameMode: GameplayMode;
   currentTurn?: string;
@@ -124,6 +141,9 @@ export interface GameSession {
   gameState: Record<string, any>;
   winnerId: string | 'draw' | null;
   xpAwarded: number;
+  rematchSessionId?: string;
+  rematchRequestedBy?: string;
+  abandonedBy?: string;
   createdAt: number;
   updatedAt: number;
   expiresAt: number;

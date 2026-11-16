@@ -1,0 +1,39 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "gameSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "coupleId", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "gameSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "coupleId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "invitations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "code", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "expiresAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "xpTransactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "coupleId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

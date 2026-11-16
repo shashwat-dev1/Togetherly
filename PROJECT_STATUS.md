@@ -3,7 +3,7 @@
 **Product Name:** Togetherly  
 **Tagline:** Two people. One little world.  
 **Category:** Couples Gaming / Social Entertainment / Lifestyle  
-**Current Milestone:** Phase 0 & Phase 1 Complete (Foundation & Functional App Foundation)  
+**Current Milestone:** Phase 2 & Phase 3 Complete (Multiplayer Session Engine & 4 Complete Playable Games)  
 **Last Updated:** November 2026  
 
 ---
@@ -20,9 +20,9 @@ Togetherly is an Android-first, production-oriented private couples gaming ecosy
 |---|---|---|---|
 | **Phase 0** | **Project Foundation:** Expo SDK 58, TypeScript strict mode, design token system, Firebase architecture, core documentation, testing framework | Week 1 | 🟢 Complete |
 | **Phase 1** | **Functional Application Foundation:** Firebase Auth, User Profiles, Couple Pairing via atomic codes & deep links, 5-Tab Navigation, Onboarding | Week 2 | 🟢 Complete |
-| **Phase 2** | **Multiplayer Game Engine:** Universal session lifecycle, Real-time + Turn-based + Simultaneous modes, server validation, reconnection | Week 3 | 🟡 Next Up |
-| **Phase 3** | **First 4 Playable Games:** *Who Knows Whom Better?*, *This or That*, *Tic-Tac-Toe*, *Rock Paper Scissors* | Week 4 | ⚪ Planned |
-| **Phase 4** | **Remaining 6 Games:** *Truth or Dare*, *Couple Trivia*, *Draw & Guess*, *Connect Four*, *Memory Match*, *Word Guess* | Week 5 | ⚪ Planned |
+| **Phase 2** | **Multiplayer Game Engine:** Universal session lifecycle, real-time snapshot synchronization, turn validation, double-blind simultaneous reveal, idempotency, reconnection | Week 3 | 🟢 Complete |
+| **Phase 3** | **First 4 Playable Games:** *Who Knows Whom Better?*, *This or That*, *Tic-Tac-Toe*, *Rock Paper Scissors* | Week 4 | 🟢 Complete |
+| **Phase 4** | **Remaining 6 Games:** *Truth or Dare*, *Couple Trivia*, *Draw & Guess*, *Connect Four*, *Memory Match*, *Word Guess* | Week 5 | 🟡 Next Up |
 | **Phase 5** | **Engagement Systems:** Daily Challenge engine, Shared XP progression, Couple Achievements, FCM push notifications | Week 6 | ⚪ Planned |
 | **Phase 6** | **Monetisation Architecture:** Freemium rules, Play Billing / RevenueCat, AdMob integration (interstitial & rewarded) | Week 7 | ⚪ Planned |
 | **Phase 7** | **Quality Assurance & Security:** Penetration audit, Security rules test, low-end device benchmarks, crash testing | Week 8 | ⚪ Planned |
@@ -34,4 +34,4 @@ Togetherly is an Android-first, production-oriented private couples gaming ecosy
 
 - **Lint:** Clean pass (`npx expo lint` -> 0 errors, 0 warnings).
 - **TypeScript:** Strict typecheck clean pass (`npx tsc --noEmit` -> 0 errors).
-- **Unit & Integration Tests:** 17 tests passed (`npm test` -> 100% pass rate).
+- **Unit, Integration & Security Tests:** 28 tests passed across 4 suites (`npm test` -> 100% pass rate).
