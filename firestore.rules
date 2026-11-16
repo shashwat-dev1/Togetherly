@@ -16,10 +16,6 @@ service cloud.firestore {
         request.auth.uid in get(/databases/$(database)/documents/couples/$(coupleId)).data.memberIds;
     }
 
-    function isSessionPlayer(sessionData) {
-      return isAuthenticated() && request.auth.uid in sessionData.playerIds;
-    }
-
     // Default Deny All
     match /{document=**} {
       allow read, write: if false;

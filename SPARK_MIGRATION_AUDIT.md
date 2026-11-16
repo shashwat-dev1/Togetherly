@@ -82,3 +82,4 @@ Under the Firebase Spark plan, all code executes on the client device (React Nat
 - [x] Firestore security rules hardened for Spark double-blind reveal.
 - [x] XP award idempotency verified with automated tests.
 - [x] 72 automated tests passing across 6 suites (`npm test`).
+

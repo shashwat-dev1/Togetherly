@@ -60,3 +60,4 @@ The application architecture has been migrated to run strictly within the limits
 2. **`firebase.json` Hardened**: The `"functions"` deployment block has been removed. Running `firebase deploy` deploys only free Firestore security rules and composite indexes.
 3. **Local Assets**: All avatar images, sound assets, and game prompt catalogs are bundled directly inside the standalone Android APK rather than fetched over paid CDNs.
 4. **Idempotent Writes**: All XP transactions and game moves employ deterministic IDs to prevent duplicate database writes.
+

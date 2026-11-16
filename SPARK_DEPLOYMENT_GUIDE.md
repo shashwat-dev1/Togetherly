@@ -120,3 +120,4 @@ If a security rule modification needs to be reverted:
    git checkout HEAD~1 firestore.rules
    npm run deploy:spark
    ```
+
