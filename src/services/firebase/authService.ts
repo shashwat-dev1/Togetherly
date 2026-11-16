@@ -12,7 +12,7 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from './config';
-import { UserProfile } from '@/types';
+import { UserProfile, UserPreferences } from '@/types';
 
 // In-memory mock store for offline testing and fast local preview
 let mockUser: UserProfile | null = {
@@ -148,6 +148,26 @@ export const AuthService = {
   async updateAvatar(avatarId: string): Promise<void> {
     if (mockUser) {
       mockUser.avatarId = avatarId;
+    }
+  },
+
+  async updatePreferences(preferences: Partial<UserPreferences>): Promise<void> {
+    if (isFirebaseConfigured && auth && auth.currentUser) {
+      const { db } = await import('./config');
+      if (db) {
+        const { doc, updateDoc, serverTimestamp } = await import('firebase/firestore');
+        const userRef = doc(db, 'users', auth.currentUser.uid);
+        await updateDoc(userRef, {
+          preferences,
+          updatedAt: serverTimestamp(),
+        });
+      }
+    }
+    if (mockUser) {
+      mockUser.preferences = {
+        ...mockUser.preferences,
+        ...preferences,
+      };
     }
   },
 

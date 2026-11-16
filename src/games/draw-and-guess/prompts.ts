@@ -82,3 +82,4 @@ export const DRAWING_PROMPTS: DrawingPrompt[] = [
   { id: 'dg_59', word: 'planting flowers', category: 'activities', hint: 'Spade, soil and blooming pot', difficulty: 'medium' },
   { id: 'dg_60', word: 'watching fireworks', category: 'activities', hint: 'Colorful explosions in night sky', difficulty: 'easy' },
 ];
+

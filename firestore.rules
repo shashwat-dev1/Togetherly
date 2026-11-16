@@ -58,6 +58,13 @@ service cloud.firestore {
         allow read: if isCoupleMember(coupleId);
         allow write: if false; // Cloud Functions authority only
       }
+
+      // Activities Timeline Subcollection
+      match /activities/{activityId} {
+        allow read: if isCoupleMember(coupleId);
+        allow create: if isCoupleMember(coupleId);
+        allow update, delete: if false;
+      }
     }
 
     // 3. Invitations Collection
@@ -110,9 +117,9 @@ service cloud.firestore {
 
     // 6. Notifications Collection
     match /notifications/{notificationId} {
-      allow read, update: if isAuthenticated() && resource.data.recipientId == request.auth.uid;
+      allow read, update: if isAuthenticated() && (resource.data.recipientUid == request.auth.uid || resource.data.recipientId == request.auth.uid);
       allow create: if isAuthenticated();
-      allow delete: if isAuthenticated() && resource.data.recipientId == request.auth.uid;
+      allow delete: if isAuthenticated() && (resource.data.recipientUid == request.auth.uid || resource.data.recipientId == request.auth.uid);
     }
   }
 }

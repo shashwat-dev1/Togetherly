@@ -17,6 +17,10 @@ interface UserDocument {
   fcmTokens: string[];
   preferences: {
     notificationsEnabled: boolean;
+    notifyTurnReady?: boolean;
+    notifyDailyChallenge?: boolean;
+    notifyAchievements?: boolean;
+    notifyStreakReminder?: boolean;
     soundEnabled: boolean;
     hapticsEnabled: boolean;
     matureContentAllowed: boolean;
@@ -174,6 +178,26 @@ interface CoupleAchievementDocument {
   unlockedAt: FirebaseFirestore.Timestamp;
   unlockedByAction: string;
   tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+}
+```
+
+---
+
+### `couples/{coupleId}/activities/{activityId}`
+Paginated activity timeline documenting games played, daily challenge victories, level ups, and turns waiting.
+```typescript
+interface CoupleActivityDocument {
+  id: string;
+  coupleId: string;
+  type: 'game_completed' | 'turn_ready' | 'daily_challenge' | 'achievement_unlocked' | 'streak_milestone' | 'level_up';
+  title: string;
+  description: string;
+  timestamp: FirebaseFirestore.Timestamp;
+  actorUid?: string;
+  actorName?: string;
+  gameId?: string;
+  xpAwarded?: number;
+  actionRequired: boolean;
 }
 ```
 

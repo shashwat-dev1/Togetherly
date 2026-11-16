@@ -16,29 +16,29 @@
 
 ## Detailed Step-by-Step Breakdown
 
-### Phase 0: Project Foundation (Current)
+### Phase 0: Project Foundation (Completed)
 - [x] Initial project inspection & Git repository setup.
 - [x] Technical architecture, database schema, project status documentation.
 - [x] Expo SDK 58 application initialization.
-- [ ] Dependencies installation (`zustand`, `zod`, `@tanstack/react-query`, `firebase`, `lucide-react-native`, `react-native-svg`, `expo-haptics`).
-- [ ] Design token system (`src/constants/tokens.ts`) with theme switcher (light/dark/romantic).
-- [ ] TypeScript strict mode configuration and baseline tests.
+- [x] Dependencies installation (`zustand`, `zod`, `@tanstack/react-query`, `firebase`, `lucide-react-native`, `react-native-svg`, `expo-haptics`).
+- [x] Design token system (`src/constants/tokens.ts`) with theme switcher (light/dark/romantic).
+- [x] TypeScript strict mode configuration and baseline tests.
 
-### Phase 1: Functional Application Foundation
-- [ ] 5-Tab Navigation layout (`(tabs)/home`, `games`, `our-world`, `activity`, `profile`).
-- [ ] Reusable UI component library (`AppButton`, `GameCard`, `Avatar`, `CoupleAvatar`, `Modal`, `Toast`, `Badge`).
-- [ ] Firebase Configuration with emulator & offline fallback mode.
-- [ ] Authentication Flow (`(auth)/login`, `(auth)/register`, `(auth)/forgot-password`).
-- [ ] Onboarding Profile Setup (`(onboarding)/profile-setup`, avatar selection).
-- [ ] Couple Pairing Flow (`(onboarding)/pair`, invite code generation, invite code redemption, native share).
-- [ ] Realtime couple presence and dashboard header.
+### Phase 1: Functional Application Foundation (Completed)
+- [x] 5-Tab Navigation layout (`(tabs)/home`, `games`, `our-world`, `activity`, `profile`).
+- [x] Reusable UI component library (`AppButton`, `GameCard`, `Avatar`, `CoupleAvatar`, `Modal`, `Toast`, `Badge`).
+- [x] Firebase Configuration with emulator & offline fallback mode.
+- [x] Authentication Flow (`(auth)/login`, `(auth)/register`, `(auth)/forgot-password`).
+- [x] Onboarding Profile Setup (`(onboarding)/profile-setup`, avatar selection).
+- [x] Couple Pairing Flow (`(onboarding)/pair`, invite code generation, invite code redemption, native share).
+- [x] Realtime couple presence and dashboard header.
 
-### Phase 2: Multiplayer Engine
-- [ ] Universal game session interface and state machine (`src/games/engine.ts`).
-- [ ] Real-time sync listener with automatic retry & exponential backoff.
-- [ ] Turn-based alternation validation.
-- [ ] Simultaneous submission & double-blind reveal mechanism.
-- [ ] Disconnect and abandonment timer handler.
+### Phase 2: Multiplayer Engine (Completed)
+- [x] Universal game session interface and state machine (`src/games/engine.ts`).
+- [x] Real-time sync listener with automatic retry & exponential backoff.
+- [x] Turn-based alternation validation.
+- [x] Simultaneous submission & double-blind reveal mechanism.
+- [x] Disconnect and abandonment timer handler.
 
 ### Phase 3: First Four Playable Games (Completed)
 - [x] Game 1: **Who Knows Whom Better?** (Relationship Quiz, 7 question decks, simultaneous reveal).
@@ -54,23 +54,28 @@
 - [x] Game 9: **Memory Match** (16 cards with 8 couple-themed pairs, deterministic seed shuffle, alternating turns with bonus turn on match, pair tracking).
 - [x] Game 10: **Word Guess** (5-letter couple word puzzles with Wordle-standard letter evaluation, 6 collaborative attempts, on-screen keyboard, romantic hints).
 
-### Phase 5: Engagement & Shared World
-- [ ] Daily Challenge system with server reset logic.
-- [ ] Shared Couple XP and leveling system.
-- [ ] Couple Achievements system (First Match, Perfect Match, 7-Day Streak).
-- [ ] Push Notifications via FCM and Deep Link routing.
+### Phase 5: Engagement & Retention Engine (Completed)
+- [x] **Daily Challenge Engine:** Server-controlled daily challenges with deterministic UTC date mapping and 104 reusable definitions across 6 categories; single claim reward enforcement.
+- [x] **Shared Couple XP & Progression Curve:** Server-authoritative leveling formula `250*(level-1) + 50*(level-1)^2`, level progression bar, 10 couple level titles, immutable XP transaction audit log.
+- [x] **Couple Achievement System:** 18 curated couple achievements across 5 categories (First Steps, Game Mastery, Consistency, Exploration, Special) with 4 tiers (Bronze, Silver, Gold, Platinum).
+- [x] **Daily & Weekly Streaks:** UTC calendar boundary evaluation, milestone rewards (3, 7, 14, 30 days), non-punitive design preserving longest streak on missed days.
+- [x] **Activity History Feed:** Paginated timeline with filter tabs (All, Turns Waiting, Games, Milestones), relative timestamps, and one-tap game turn resumption.
+- [x] **Our World Screen:** Hydrated achievement gallery with category filtering, milestone statistics, and interactive achievement detail modal.
+- [x] **Granular Notification Preferences:** In-app switches for turn alerts, daily challenges, achievements, and streak reminders; multi-cast FCM push trigger in Cloud Functions.
+- [x] **Deep Linking Architecture:** `togetherly://` scheme supporting pairing codes, game sessions, daily challenges, achievements, and activity navigation.
 
-### Phase 6: Monetisation Architecture
+### Phase 6: Monetisation Architecture (Next Up)
 - [ ] Google Play Billing integration / RevenueCat wrapper.
-- [ ] Plus Plan entitlement propagation: 1 subscription unlocks Plus for both partners.
-- [ ] Google AdMob integration (Rewarded ads for bonus games, interstitial post-match, zero ads for Plus).
+- [ ] Togetherly Plus subscription tier (Monthly & Annual).
+- [ ] Freemium gatekeeper service (3 free games vs 10 plus games; free vs premium decks).
+- [ ] Google Mobile Ads (AdMob) SDK configuration (interstitial ads with cooldown, rewarded ads for hints).
 
-### Phase 7: Quality Assurance & Security
-- [ ] Firestore Security Rules unit test suite.
-- [ ] End-to-end two-account match verification.
-- [ ] Low-end Android memory and FPS profiling.
+### Phase 7: Testing, Hardening & Security
+- [ ] End-to-end device testing with two active clients.
+- [ ] Firebase Security Rules unit verification.
+- [ ] Latency & offline reconnect resilience testing.
 
-### Phase 8: Play Store Release
-- [ ] App bundle signing (AAB).
-- [ ] Google Play Store listing, Privacy Policy, Data Safety disclosure.
-
+### Phase 8: Store Deployment
+- [ ] Google Play Console store assets, icon sets, screenshots.
+- [ ] Release AAB bundling & signing.
+- [ ] Play Store review submission.

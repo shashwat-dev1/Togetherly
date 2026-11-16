@@ -276,6 +276,19 @@ export const onPrivateAnswerWritten = functions.firestore
 /**
  * Helper: Atomically Award Shared XP and Record Audit Transaction
  */
+function calculateCoupleLevel(totalXP: number): number {
+  let level = 1;
+  while (true) {
+    const requiredForNext = 250 * level + 50 * Math.pow(level, 2);
+    if (totalXP >= requiredForNext) {
+      level++;
+    } else {
+      break;
+    }
+  }
+  return level;
+}
+
 async function awardCoupleXP(
   transaction: admin.firestore.Transaction,
   coupleId: string,
@@ -290,7 +303,7 @@ async function awardCoupleXP(
   const coupleData = coupleSnap.data()!;
   const currentXP = coupleData.sharedXP || 0;
   const newXP = currentXP + amount;
-  const newLevel = Math.floor(newXP / 500) + 1;
+  const newLevel = calculateCoupleLevel(newXP);
 
   transaction.update(coupleRef, {
     sharedXP: newXP,
@@ -310,3 +323,105 @@ async function awardCoupleXP(
     verified: true,
   });
 }
+
+/**
+ * 3. CLOUD FUNCTION: DISPATCH FCM PUSH NOTIFICATIONS ON NOTIFICATION CREATED
+ */
+export const onNotificationCreated = functions.firestore
+  .document('notifications/{notificationId}')
+  .onCreate(async (snap, context) => {
+    const data = snap.data();
+    if (!data || !data.recipientUid) return null;
+
+    const { recipientUid, type, title, body, data: customData } = data;
+
+    // Check user preferences & tokens
+    const userSnap = await db.collection('users').doc(recipientUid).get();
+    if (!userSnap.exists) return null;
+
+    const userData = userSnap.data()!;
+    const preferences = userData.preferences || {};
+    const fcmTokens: string[] = userData.fcmTokens || [];
+
+    if (fcmTokens.length === 0) return null;
+
+    // Preference checking
+    if (preferences.notificationsEnabled === false) return null;
+    if (
+      (type === 'your_turn' || type === 'partner_moved') &&
+      preferences.notifyTurnReady === false
+    ) {
+      return null;
+    }
+    if (
+      (type === 'daily_challenge_available' || type === 'challenge_completed') &&
+      preferences.notifyDailyChallenge === false
+    ) {
+      return null;
+    }
+    if (
+      (type === 'achievement_unlocked' || type === 'level_unlocked') &&
+      preferences.notifyAchievements === false
+    ) {
+      return null;
+    }
+
+    try {
+      const multicastMessage: admin.messaging.MulticastMessage = {
+        tokens: fcmTokens,
+        notification: {
+          title,
+          body,
+        },
+        data: {
+          ...(customData || {}),
+          type: type || 'general',
+          click_action: 'FLUTTER_NOTIFICATION_CLICK',
+        },
+        android: {
+          priority: 'high',
+          notification: {
+            channelId: 'togetherly_general',
+            sound: 'default',
+          },
+        },
+      };
+
+      const response = await admin.messaging().sendEachForMulticast(multicastMessage);
+
+      // Clean up invalid or stale tokens if any failed
+      if (response.failureCount > 0) {
+        const failedTokens: string[] = [];
+        response.responses.forEach((resp, idx) => {
+          if (!resp.success) {
+            const errCode = resp.error?.code;
+            if (
+              errCode === 'messaging/invalid-registration-token' ||
+              errCode === 'messaging/registration-token-not-registered'
+            ) {
+              failedTokens.push(fcmTokens[idx]);
+            }
+          }
+        });
+
+        if (failedTokens.length > 0) {
+          await db
+            .collection('users')
+            .doc(recipientUid)
+            .update({
+              fcmTokens: admin.firestore.FieldValue.arrayRemove(...failedTokens),
+            });
+        }
+      }
+
+      await snap.ref.update({
+        dispatchedAt: admin.firestore.FieldValue.serverTimestamp(),
+        successCount: response.successCount,
+        failureCount: response.failureCount,
+      });
+    } catch (err) {
+      console.error('Failed to send FCM notification:', err);
+    }
+
+    return null;
+  });

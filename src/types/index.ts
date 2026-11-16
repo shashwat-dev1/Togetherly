@@ -8,6 +8,10 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 
 export interface UserPreferences {
   notificationsEnabled: boolean;
+  notifyTurnReady?: boolean;
+  notifyDailyChallenge?: boolean;
+  notifyAchievements?: boolean;
+  notifyStreakReminder?: boolean;
   soundEnabled: boolean;
   hapticsEnabled: boolean;
   matureContentAllowed: boolean;
@@ -149,26 +153,113 @@ export interface GameSession {
   expiresAt: number;
 }
 
+export type DailyChallengeCategory = 
+  | 'relationship_questions'
+  | 'competitive_games'
+  | 'cooperative_games'
+  | 'funny_challenges'
+  | 'creative_challenges'
+  | 'preference_matching';
+
 export interface DailyChallenge {
-  id: string; // YYYY-MM-DD
+  id: string; // YYYY-MM-DD or template ID
   date: string;
   title: string;
   description: string;
-  category: 'quiz' | 'action' | 'game' | 'reflection';
+  category: DailyChallengeCategory;
   targetGameId?: string;
   targetCount: number;
   rewardXP: number;
+  hint?: string;
 }
+
+export interface CoupleDailyChallengeProgress {
+  date: string; // YYYY-MM-DD
+  challengeId: string;
+  currentCount: number;
+  targetCount: number;
+  completed: boolean;
+  rewardClaimed: boolean;
+  completedAt?: number;
+  contributions: Record<string, number>;
+}
+
+export type AchievementCategory = 
+  | 'first_steps'
+  | 'game_mastery'
+  | 'consistency'
+  | 'exploration'
+  | 'special';
+
+export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'platinum';
 
 export interface Achievement {
   id: string;
   title: string;
   description: string;
-  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+  category: AchievementCategory;
+  tier: AchievementTier;
   rewardXP: number;
   icon: string;
+  unlocked: boolean;
   unlockedAt?: number;
+  progress?: number;
+  targetCount?: number;
 }
+
+export interface CoupleAchievement {
+  achievementId: string;
+  unlockedAt: number;
+  unlockedBy?: string;
+  tier: AchievementTier;
+  rewardClaimed: boolean;
+}
+
+export type CoupleActivityType = 
+  | 'game_completed'
+  | 'game_won'
+  | 'daily_challenge'
+  | 'achievement_unlocked'
+  | 'level_up'
+  | 'streak_milestone'
+  | 'turn_ready';
+
+export interface CoupleActivityItem {
+  id: string;
+  coupleId: string;
+  type: CoupleActivityType;
+  title: string;
+  description: string;
+  timestamp: number;
+  actorUid?: string;
+  actorName?: string;
+  gameId?: string;
+  referenceId?: string;
+  xpAwarded?: number;
+  actionRequired?: boolean;
+}
+
+export interface XPTransaction {
+  id: string;
+  coupleId: string;
+  source: 'game_win' | 'game_completion' | 'daily_challenge' | 'streak_bonus' | 'achievement';
+  referenceId: string;
+  gameId?: string;
+  amount: number;
+  createdAt: number;
+  verified: boolean;
+}
+
+export type NotificationType = 
+  | 'partner_invited'
+  | 'partner_accepted'
+  | 'your_turn'
+  | 'partner_moved'
+  | 'game_completed'
+  | 'daily_challenge_available'
+  | 'challenge_completed'
+  | 'achievement_unlocked'
+  | 'level_unlocked';
 
 // Zod Validation Schemas
 export const RegisterSchema = z.object({

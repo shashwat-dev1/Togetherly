@@ -3,7 +3,7 @@
 **Product Name:** Togetherly  
 **Tagline:** Two people. One little world.  
 **Category:** Couples Gaming / Social Entertainment / Lifestyle  
-**Current Milestone:** Phase 4 Complete (All 10 Multiplayer Games Functional & Playable)  
+**Current Milestone:** Phase 5 Complete (Engagement & Retention Engine Fully Functional)  
 **Last Updated:** November 2026  
 
 ---
@@ -23,8 +23,8 @@ Togetherly is an Android-first, production-oriented private couples gaming ecosy
 | **Phase 2** | **Multiplayer Game Engine:** Universal session lifecycle, real-time snapshot synchronization, turn validation, double-blind simultaneous reveal, idempotency, reconnection | Week 3 | 🟢 Complete |
 | **Phase 3** | **First 4 Playable Games:** *Who Knows Whom Better?*, *This or That*, *Tic-Tac-Toe*, *Rock Paper Scissors* | Week 4 | 🟢 Complete |
 | **Phase 4** | **Remaining 6 Games:** *Truth or Dare*, *Couple Trivia*, *Draw & Guess*, *Connect Four*, *Memory Match*, *Word Guess* | Week 5 | 🟢 Complete |
-| **Phase 5** | **Engagement Systems:** Daily Challenge engine, Shared XP progression, Couple Achievements, FCM push notifications | Week 6 | 🟡 Next Up |
-| **Phase 6** | **Monetisation Architecture:** Freemium rules, Play Billing / RevenueCat, AdMob integration (interstitial & rewarded) | Week 7 | ⚪ Planned |
+| **Phase 5** | **Engagement & Retention Engine:** Server-controlled Daily Challenges (104 templates across 6 categories), Shared XP & Couple Level Progression curve, 18 Hydrated Achievements across 5 categories, Non-punitive Streaks, Timeline Activity Feed, FCM push dispatcher with preference filtering, Deep Linking (`togetherly://`) | Week 6 | 🟢 Complete |
+| **Phase 6** | **Monetisation Architecture:** Freemium rules, Play Billing / RevenueCat, AdMob integration (interstitial & rewarded) | Week 7 | 🟡 Next Up |
 | **Phase 7** | **Quality Assurance & Security:** Penetration audit, Security rules test, low-end device benchmarks, crash testing | Week 8 | ⚪ Planned |
 | **Phase 8** | **Google Play Release Preparation:** Signed AAB, Data Safety disclosures, Store assets, closed testing | Week 9 | ⚪ Planned |
 
@@ -35,4 +35,4 @@ Togetherly is an Android-first, production-oriented private couples gaming ecosy
 - **Lint:** Clean pass (`npx expo lint` -> 0 errors, 0 warnings).
 - **TypeScript:** Strict typecheck clean pass (`npx tsc --noEmit` -> 0 errors).
 - **Cloud Functions:** Strict TypeScript compilation clean pass (`tsc` in functions -> 0 errors).
-- **Unit, Integration & Security Tests:** 46 tests passed across 4 suites (`npm test` -> 100% pass rate).
+- **Unit, Integration & Security Tests:** 65 tests passed across 5 test suites (`npm test` -> 100% pass rate).

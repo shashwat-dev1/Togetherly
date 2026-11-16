@@ -14,6 +14,7 @@ interface AuthState {
   register: (email: string, pass: string, name: string) => Promise<UserProfile>;
   logout: () => Promise<void>;
   updateAvatar: (avatarId: string) => Promise<void>;
+  updatePreferences: (prefs: Partial<UserProfile['preferences']>) => Promise<void>;
   clearError: () => void;
 }
 
@@ -59,6 +60,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const currentUser = get().user;
     if (currentUser) {
       set({ user: { ...currentUser, avatarId } });
+    }
+  },
+
+  updatePreferences: async (prefs: Partial<UserProfile['preferences']>) => {
+    await AuthService.updatePreferences(prefs);
+    const currentUser = get().user;
+    if (currentUser) {
+      set({
+        user: {
+          ...currentUser,
+          preferences: {
+            ...currentUser.preferences,
+            ...prefs,
+          },
+        },
+      });
     }
   },
 

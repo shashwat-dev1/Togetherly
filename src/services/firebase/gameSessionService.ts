@@ -16,6 +16,12 @@ import {
   GameplayMode,
 } from '@/types';
 import { db, runtimeMode } from './config';
+import { XPProgressionService } from '@/services/engagement/xpProgressionService';
+import { DailyChallengeService } from '@/services/engagement/dailyChallengeService';
+import { StreakService } from '@/services/engagement/streakService';
+import { AchievementService } from '@/services/engagement/achievementService';
+import { ActivityService } from '@/services/engagement/activityService';
+import { NotificationService } from '@/services/notifications/notificationService';
 import {
   doc,
   getDoc,
@@ -47,6 +53,58 @@ function notifyMockSubscribers(sessionId: string, session: GameSession) {
         console.error('[GameSessionService] Listener error:', err);
       }
     });
+  }
+}
+
+async function triggerGameCompletionEngagement(session: GameSession): Promise<void> {
+  try {
+    const { coupleId, gameId, id: sessionId, xpAwarded, winnerId, playerIds } = session;
+    const reward = xpAwarded || 30;
+
+    // 1. Award shared XP
+    await XPProgressionService.awardXP(coupleId, reward, 'game_completion', sessionId, gameId);
+
+    // 2. Advance daily challenge
+    await DailyChallengeService.recordGameActivity(coupleId, playerIds[0], gameId);
+
+    // 3. Update couple streak
+    await StreakService.recordCoupleActivity(coupleId);
+
+    // 4. Log in activity timeline
+    const isDraw = winnerId === 'draw';
+    await ActivityService.recordActivity(coupleId, {
+      type: 'game_completed',
+      title: `${gameId.replace(/-/g, ' ').toUpperCase()} Match Complete`,
+      description: isDraw ? 'Match ended in a draw!' : 'Game concluded with flying colors!',
+      gameId,
+      referenceId: sessionId,
+      xpAwarded: reward,
+      actionRequired: false,
+    });
+
+    // 5. Evaluate Achievements
+    await AchievementService.evaluateAndUnlockAchievements(coupleId, {
+      gameId,
+      isWin: !!winnerId && winnerId !== 'draw',
+      totalMatchesPlayed: 1,
+      totalMatchesWon: winnerId && winnerId !== 'draw' ? 1 : 0,
+      distinctGamesPlayed: [gameId],
+      currentStreak: 1,
+    });
+
+    // 6. Notify partner
+    const partnerId = playerIds[1];
+    if (partnerId) {
+      await NotificationService.sendNotification({
+        toUid: partnerId,
+        type: 'game_completed',
+        title: 'Match Finished!',
+        body: `Your match in ${gameId.replace(/-/g, ' ')} has finished. Check the results!`,
+        data: { gameId, sessionId },
+      });
+    }
+  } catch (err) {
+    console.error('[Engagement] Game completion hook error:', err);
   }
 }
 
@@ -364,12 +422,34 @@ export const GameSessionService = {
         xpAwarded: updatedSession.xpAwarded,
         updatedAt: serverTimestamp(),
       });
+      if (updatedSession.status === 'completed') {
+        triggerGameCompletionEngagement(updatedSession).catch(() => {});
+      } else if (updatedSession.status === 'active' && nextTurn) {
+        NotificationService.sendNotification({
+          toUid: nextTurn,
+          type: 'your_turn',
+          title: 'Your Turn!',
+          body: `It's your turn in ${session.gameId.replace(/-/g, ' ')}. Make your move!`,
+          data: { gameId: session.gameId, sessionId: session.id },
+        }).catch(() => {});
+      }
       return updatedSession;
     }
 
     // Mock Mode
     mockSessions.set(sessionId, updatedSession);
     notifyMockSubscribers(sessionId, updatedSession);
+    if (updatedSession.status === 'completed') {
+      triggerGameCompletionEngagement(updatedSession).catch(() => {});
+    } else if (updatedSession.status === 'active' && nextTurn) {
+      NotificationService.sendNotification({
+        toUid: nextTurn,
+        type: 'your_turn',
+        title: 'Your Turn!',
+        body: `It's your turn in ${session.gameId.replace(/-/g, ' ')}. Make your move!`,
+        data: { gameId: session.gameId, sessionId: session.id },
+      }).catch(() => {});
+    }
     return updatedSession;
   },
 
@@ -555,12 +635,18 @@ export const GameSessionService = {
         xpAwarded: updatedSession.xpAwarded,
         updatedAt: serverTimestamp(),
       });
+      if (updatedSession.status === 'completed') {
+        triggerGameCompletionEngagement(updatedSession).catch(() => {});
+      }
       return { session: updatedSession, bothSubmitted, revealedRoundResult };
     }
 
     // Mock Mode
     mockSessions.set(sessionId, updatedSession);
     notifyMockSubscribers(sessionId, updatedSession);
+    if (updatedSession.status === 'completed') {
+      triggerGameCompletionEngagement(updatedSession).catch(() => {});
+    }
     return { session: updatedSession, bothSubmitted, revealedRoundResult };
   },
 
@@ -588,11 +674,13 @@ export const GameSessionService = {
         xpAwarded: 50,
         updatedAt: serverTimestamp(),
       });
+      triggerGameCompletionEngagement(updatedSession).catch(() => {});
       return updatedSession;
     }
 
     mockSessions.set(sessionId, updatedSession);
     notifyMockSubscribers(sessionId, updatedSession);
+    triggerGameCompletionEngagement(updatedSession).catch(() => {});
     return updatedSession;
   },
 

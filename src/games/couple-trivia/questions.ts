@@ -180,3 +180,4 @@ export const TRIVIA_QUESTIONS: TriviaQuestion[] = [
   { id: 't_s_29', category: 'science', categoryName: 'Science & Nature', question: 'How long does sunlight take to travel from the Sun to Earth?', options: ['Instantaneous', 'About 8 minutes 20 seconds', '1 hour', '24 seconds'], correctIndex: 1 },
   { id: 't_s_30', category: 'science', categoryName: 'Science & Nature', question: 'Which tree species is considered the tallest living tree on Earth?', options: ['Coast Redwood (Sequoia)', 'Giant Sequoia', 'Douglas Fir', 'Eucalyptus'], correctIndex: 0 },
 ];
+

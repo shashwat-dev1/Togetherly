@@ -2,7 +2,8 @@
  * TOGETHERLY — PROFILE & SETTINGS
  *
  * User profile, partner status, theme switcher,
- * subscription tier details, partner disconnect, and sign out.
+ * granular notification preferences, subscription tier details,
+ * partner disconnect, and sign out.
  */
 import React, { useState } from 'react';
 import {
@@ -33,21 +34,40 @@ import {
   LogOut,
   ChevronRight,
   Heart,
+  Vibrate,
+  Play,
+  Target,
+  Trophy,
+  Flame,
 } from 'lucide-react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { theme, isDark, toggleTheme } = useThemeStore();
-  const { user, logout } = useAuthStore();
+  const { user, logout, updatePreferences } = useAuthStore();
   const { couple, disconnect } = useCoupleStore();
 
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [hapticsEnabled, setHapticsEnabled] = useState(true);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+
+  const prefs = user?.preferences;
+  const soundEnabled = prefs?.soundEnabled ?? true;
+  const hapticsEnabled = prefs?.hapticsEnabled ?? true;
+  const notificationsEnabled = prefs?.notificationsEnabled ?? true;
+  const notifyTurnReady = prefs?.notifyTurnReady ?? true;
+  const notifyDailyChallenge = prefs?.notifyDailyChallenge ?? true;
+  const notifyAchievements = prefs?.notifyAchievements ?? true;
+  const notifyStreakReminder = prefs?.notifyStreakReminder ?? true;
 
   const partnerId = couple?.memberIds.find((id) => id !== user?.uid);
   const partner = partnerId && couple?.members[partnerId] ? couple.members[partnerId] : null;
+
+  const handleTogglePreference = async (key: string, val: boolean) => {
+    try {
+      await updatePreferences({ [key]: val });
+    } catch (err) {
+      console.warn('Failed to update preference:', err);
+    }
+  };
 
   const handleDisconnect = () => {
     Alert.alert(
@@ -152,7 +172,7 @@ export default function ProfileScreen() {
 
         {/* Appearance & Sound Settings */}
         <Text style={[styles.groupLabel, { color: theme.colors.textMuted }]}>
-          PREFERENCES
+          EXPERIENCE & THEME
         </Text>
         <AppCard style={styles.sectionCard}>
           {/* Dark Mode Switch */}
@@ -186,7 +206,7 @@ export default function ProfileScreen() {
             </Text>
             <Switch
               value={soundEnabled}
-              onValueChange={setSoundEnabled}
+              onValueChange={(val) => handleTogglePreference('soundEnabled', val)}
               trackColor={{ false: '#D4CEE0', true: theme.colors.primary }}
             />
           </View>
@@ -196,39 +216,120 @@ export default function ProfileScreen() {
           {/* Haptics */}
           <View style={styles.settingRow}>
             <View style={styles.settingIconCol}>
-              <Bell size={20} color={theme.colors.textSecondary} />
+              <Vibrate size={20} color={theme.colors.textSecondary} />
             </View>
             <Text style={[styles.settingTitle, { color: theme.colors.textPrimary, flex: 1 }]}>
               Haptic Feedback
             </Text>
             <Switch
               value={hapticsEnabled}
-              onValueChange={setHapticsEnabled}
-              trackColor={{ false: '#D4CEE0', true: theme.colors.primary }}
-            />
-          </View>
-
-          <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
-
-          {/* Notifications */}
-          <View style={styles.settingRow}>
-            <View style={styles.settingIconCol}>
-              <Bell size={20} color={theme.colors.textSecondary} />
-            </View>
-            <Text style={[styles.settingTitle, { color: theme.colors.textPrimary, flex: 1 }]}>
-              Turn Notifications
-            </Text>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
+              onValueChange={(val) => handleTogglePreference('hapticsEnabled', val)}
               trackColor={{ false: '#D4CEE0', true: theme.colors.primary }}
             />
           </View>
         </AppCard>
 
+        {/* Notification Preferences */}
+        <Text style={[styles.groupLabel, { color: theme.colors.textMuted }]}>
+          NOTIFICATIONS
+        </Text>
+        <AppCard style={styles.sectionCard}>
+          {/* Master Notifications */}
+          <View style={styles.settingRow}>
+            <View style={styles.settingIconCol}>
+              <Bell size={20} color={theme.colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.settingTitle, { color: theme.colors.textPrimary }]}>
+                Allow Notifications
+              </Text>
+              <Text style={[styles.settingSubtitle, { color: theme.colors.textSecondary }]}>
+                Turn alerts, challenges & reminders
+              </Text>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={(val) => handleTogglePreference('notificationsEnabled', val)}
+              trackColor={{ false: '#D4CEE0', true: theme.colors.primary }}
+            />
+          </View>
+
+          {notificationsEnabled ? (
+            <>
+              <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
+
+              {/* Turn Notifications */}
+              <View style={styles.subSettingRow}>
+                <View style={styles.subIconCol}>
+                  <Play size={16} color={theme.colors.textSecondary} />
+                </View>
+                <Text style={[styles.subSettingTitle, { color: theme.colors.textPrimary, flex: 1 }]}>
+                  Your Turn Alerts
+                </Text>
+                <Switch
+                  value={notifyTurnReady}
+                  onValueChange={(val) => handleTogglePreference('notifyTurnReady', val)}
+                  trackColor={{ false: '#D4CEE0', true: theme.colors.primary }}
+                />
+              </View>
+
+              <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
+
+              {/* Daily Challenge */}
+              <View style={styles.subSettingRow}>
+                <View style={styles.subIconCol}>
+                  <Target size={16} color={theme.colors.textSecondary} />
+                </View>
+                <Text style={[styles.subSettingTitle, { color: theme.colors.textPrimary, flex: 1 }]}>
+                  Daily Challenge Alerts
+                </Text>
+                <Switch
+                  value={notifyDailyChallenge}
+                  onValueChange={(val) => handleTogglePreference('notifyDailyChallenge', val)}
+                  trackColor={{ false: '#D4CEE0', true: theme.colors.primary }}
+                />
+              </View>
+
+              <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
+
+              {/* Achievements & Level Ups */}
+              <View style={styles.subSettingRow}>
+                <View style={styles.subIconCol}>
+                  <Trophy size={16} color={theme.colors.textSecondary} />
+                </View>
+                <Text style={[styles.subSettingTitle, { color: theme.colors.textPrimary, flex: 1 }]}>
+                  Achievements & Level Ups
+                </Text>
+                <Switch
+                  value={notifyAchievements}
+                  onValueChange={(val) => handleTogglePreference('notifyAchievements', val)}
+                  trackColor={{ false: '#D4CEE0', true: theme.colors.primary }}
+                />
+              </View>
+
+              <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
+
+              {/* Streak Reminders */}
+              <View style={styles.subSettingRow}>
+                <View style={styles.subIconCol}>
+                  <Flame size={16} color={theme.colors.textSecondary} />
+                </View>
+                <Text style={[styles.subSettingTitle, { color: theme.colors.textPrimary, flex: 1 }]}>
+                  Streak Reminders
+                </Text>
+                <Switch
+                  value={notifyStreakReminder}
+                  onValueChange={(val) => handleTogglePreference('notifyStreakReminder', val)}
+                  trackColor={{ false: '#D4CEE0', true: theme.colors.primary }}
+                />
+              </View>
+            </>
+          ) : null}
+        </AppCard>
+
         {/* Account & Safety Actions */}
         <Text style={[styles.groupLabel, { color: theme.colors.textMuted }]}>
-          ACCOUNT
+          ACCOUNT & SECURITY
         </Text>
         <AppCard style={styles.sectionCard}>
           <TouchableOpacity
@@ -331,7 +432,9 @@ const styles = StyleSheet.create({
   settingIconCol: { width: 32, alignItems: 'center', marginRight: 8 },
   settingTitle: { fontSize: 14, fontWeight: '600' },
   settingSubtitle: { fontSize: 12, marginTop: 2 },
+  subSettingRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4, paddingLeft: 8 },
+  subIconCol: { width: 28, alignItems: 'center', marginRight: 6 },
+  subSettingTitle: { fontSize: 13, fontWeight: '500' },
   divider: { height: 1, marginVertical: 10 },
   planBox: { padding: 14, borderRadius: 12, borderWidth: 2 },
 });
-

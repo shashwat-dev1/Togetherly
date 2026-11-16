@@ -25,6 +25,13 @@ Every core component, game engine, and synchronization flow in Togetherly must b
   - 48-hour expiration calculations.
   - Self-pairing prevention rejection.
   - Atomic couple document creation.
+- `engagement.test.ts`:
+  - **Daily Challenge Catalogue & Date Picker:** 104 challenge definitions across 6 categories, deterministic UTC date mapping, cycling/shuffling.
+  - **Daily Challenge Service:** Progress initialization, event matching against target counts, completion transition, one-time reward claim guarantee, duplicate claim rejection.
+  - **Shared XP & Couple Level Progression:** Level curve math `250*(level-1) + 50*(level-1)^2`, progression percentage calculation, level titles, transaction auditing, level-up detection.
+  - **Streak Calculation & Milestones:** Same-day activity stability, consecutive day increment, milestone detection (3, 7, 14, 30 days), non-punitive reset preserving longest streak.
+  - **Achievement Evaluation Engine:** 18 achievements across 5 tiers, event evaluation triggers (first_match, mind_readers, streaks, catalogue exploration), hydrated status mapping, duplicate unlock prevention.
+  - **Notifications & Deep Linking:** Preference filtering (master switch, turn alerts, daily challenges, achievements), `togetherly://` deep link URL generation and parsing for pair, game, daily challenge, achievements, and activity.
 
 ### 2.2 Integration Tests (`src/__tests__/integration/`)
 - `gameSessionService.test.ts`:

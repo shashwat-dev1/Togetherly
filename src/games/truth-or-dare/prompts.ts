@@ -156,3 +156,4 @@ export function getPrompts(category?: PromptCategory, allowMature: boolean = fal
     return true;
   });
 }
+

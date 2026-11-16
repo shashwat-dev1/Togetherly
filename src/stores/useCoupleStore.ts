@@ -14,6 +14,8 @@ interface CoupleState {
   createInvite: (user: UserProfile) => Promise<CoupleInvitation>;
   pairWithCode: (code: string, user: UserProfile) => Promise<CoupleProfile>;
   disconnect: () => Promise<void>;
+  updateSharedXP: (newXP: number, newLevel: number) => void;
+  updateStreak: (streakData: any) => void;
   setCouple: (couple: CoupleProfile | null) => void;
   clearError: () => void;
 }
@@ -62,6 +64,31 @@ export const useCoupleStore = create<CoupleState>((set) => ({
     set({ isLoading: true });
     await CoupleService.disconnectCouple();
     set({ couple: null, isLoading: false });
+  },
+
+  updateSharedXP: (newXP: number, newLevel: number) => {
+    set((state) => {
+      if (!state.couple) return state;
+      return {
+        couple: {
+          ...state.couple,
+          sharedXP: newXP,
+          coupleLevel: newLevel,
+        },
+      };
+    });
+  },
+
+  updateStreak: (streakData: any) => {
+    set((state) => {
+      if (!state.couple) return state;
+      return {
+        couple: {
+          ...state.couple,
+          streakData,
+        },
+      };
+    });
   },
 
   setCouple: (couple) => set({ couple }),

@@ -3,6 +3,44 @@
 All notable changes to the Togetherly platform will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.4.0-alpha] - 2026-11-16
+### Added
+- **Engagement & Retention Engine (Phase 5):**
+  1. **Server-Controlled Daily Challenge System (`src/constants/challenges.ts`, `src/services/engagement/dailyChallengeService.ts`):**
+     - 104 curated, non-repetitive challenges across 6 categories (Relationship Questions, Competitive Games, Cooperative Games, Funny Challenges, Creative Challenges, Preference Matching).
+     - Deterministic UTC date mapping ensuring both partners see identical challenges each day.
+     - Real-time shared couple progress tracking, activity matching, and strictly enforced single-claim XP reward logic preventing farming.
+  2. **Shared Couple XP & Progression Curve (`src/services/engagement/xpProgressionService.ts`):**
+     - Mathematical progression formula: `getXPRequiredForLevel(level) = 250*(level-1) + 50*(level-1)^2`.
+     - Couple level progress calculations with dynamic percentage bar, XP to next level, and 10 couple rank titles.
+     - Immutable, verified XP transaction ledger (`xpTransactions`) auditing all gains.
+  3. **Couple Achievement System (`src/constants/achievements.ts`, `src/services/engagement/achievementService.ts`):**
+     - 18 comprehensive couple achievements across 5 categories (First Steps, Game Mastery, Consistency, Exploration, Special Feats) and 4 tiers (Bronze, Silver, Gold, Platinum).
+     - Automatic unlock evaluation engine on game completion with XP awards and timeline logging; zero duplicate claims.
+  4. **Daily & Weekly Streak Engine (`src/services/engagement/streakService.ts`):**
+     - UTC calendar day boundary computation: same day maintains, consecutive day increments, missed day resets to 1 without destroying the all-time longest streak (non-punitive design).
+     - Automated streak milestone detection at 3, 7, 14, and 30 days.
+  5. **Couple Activity Timeline Feed (`src/services/engagement/activityService.ts`, `src/app/(tabs)/activity.tsx`):**
+     - Persistent, paginated couple timeline tracking games played, daily challenge victories, level ups, and turns waiting.
+     - 4 filter categories: All, Turns Waiting, Games, Milestones.
+     - One-tap "Play Your Turn" and "Play Again" direct session launching.
+  6. **Enhanced Our World Hub (`src/app/(tabs)/our-world.tsx`):**
+     - Hydrated achievement gallery with unlocked states, category filtering chips, milestone stats, and interactive detail modal.
+     - Live couple level progress bar and virtual pet / shared room roadmap teaser.
+  7. **Granular Notification Preferences (`src/app/(tabs)/profile.tsx`, `src/services/notifications/notificationService.ts`):**
+     - In-app switches for master notifications, your turn alerts, daily challenge reminders, achievement alerts, and streak preservation reminders.
+     - Cloud Function `onNotificationCreated` listening to Firestore notifications queue and sending multicast FCM pushes with automatic dead-token pruning.
+  8. **Universal Deep Linking Router (`src/services/navigation/deepLinking.ts`):**
+     - `togetherly://` URL generation and parsing for partner pairing codes (`togetherly://pair?code=...`), game sessions (`togetherly://game?...`), daily challenges (`togetherly://daily-challenge`), achievements (`togetherly://achievements`), and activity timeline (`togetherly://activity`).
+  9. **Upgraded Home Dashboard (`src/app/(tabs)/home.tsx`):**
+     - Live daily challenge card with instant one-tap reward claiming, dynamic XP level bar, real-time streak counter, pending turn navigation, and recent achievement showcase.
+- **Test Suite Expansion:**
+  - Added `src/__tests__/unit/engagement.test.ts` with 19 comprehensive unit tests covering challenges, progress tracking, leveling curves, streak math, achievements, notification preferences, and deep linking.
+  - Total automated tests expanded from 46 to 65 tests across 5 test suites with 100% pass rate.
+- **Cloud Functions & Security Rules:**
+  - Added `onNotificationCreated` FCM dispatch trigger to `functions/src/index.ts`.
+  - Added `/couples/{coupleId}/activities/{activityId}` and updated `/notifications/{notificationId}` in `firestore.rules`.
+
 ## [0.3.0-alpha] - 2026-11-16
 ### Added
 - **Six Additional Fully Playable Multiplayer Games (Phase 4):**
