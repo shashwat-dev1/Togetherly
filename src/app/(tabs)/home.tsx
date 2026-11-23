@@ -24,9 +24,11 @@ import { AppCard, Badge } from '@/components/common/AppCard';
 import { AppButton } from '@/components/common/AppButton';
 import { GameCard } from '@/components/games/GameCard';
 import { GAME_CATALOGUE } from '@/games/registry';
-import { GameDefinition, DailyChallenge, CoupleDailyChallengeProgress } from '@/types';
+import { GameDefinition, DailyChallenge, CoupleDailyChallengeProgress, GameSession, Achievement } from '@/types';
 import { DailyChallengeService } from '@/services/engagement/dailyChallengeService';
 import { calculateLevelFromXP } from '@/services/engagement/xpProgressionService';
+import { GameSessionService } from '@/services/firebase/gameSessionService';
+import { AchievementService } from '@/services/engagement/achievementService';
 import {
   Flame,
   Sparkles,
@@ -49,10 +51,10 @@ export default function HomeScreen() {
   const partnerId = couple?.memberIds.find((id) => id !== user?.uid);
   const partner = partnerId && couple?.members[partnerId] ? couple.members[partnerId] : null;
 
-  // Shared couple XP & level progression curve
-  const currentXP = couple?.sharedXP || 1450;
+  // Shared couple XP & level progression curve (real values from couple state)
+  const currentXP = couple?.sharedXP ?? 0;
   const levelProgress = calculateLevelFromXP(currentXP);
-  const streak = couple?.streakData.currentStreak || 7;
+  const streak = couple?.streakData?.currentStreak ?? 0;
 
   // Daily Challenge State
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
@@ -60,23 +62,47 @@ export default function HomeScreen() {
   const [claimingReward, setClaimingReward] = useState(false);
   const [rewardClaimedSuccess, setRewardClaimedSuccess] = useState(false);
 
+  // Real-Time Active Sessions & Achievements State
+  const [activeSessions, setActiveSessions] = useState<GameSession[]>([]);
+  const [recentAchievement, setRecentAchievement] = useState<Achievement | null>(null);
+
   useEffect(() => {
     let isMounted = true;
-    const fetchChallenge = async () => {
-      if (!couple?.id) return;
-      try {
-        const { challenge, progress } = await DailyChallengeService.getDailyChallengeWithProgress(couple.id);
+    if (!couple?.id) return;
+
+    // Fetch Daily Challenge
+    DailyChallengeService.getDailyChallengeWithProgress(couple.id)
+      .then(({ challenge, progress }) => {
         if (isMounted) {
           setDailyChallenge(challenge);
           setChallengeProgress(progress);
         }
-      } catch (err) {
-        console.error('[Home] Failed to load daily challenge:', err);
+      })
+      .catch((err) => console.error('[Home] Failed to load daily challenge:', err));
+
+    // Fetch Recent Achievement
+    AchievementService.getCoupleAchievements(couple.id)
+      .then((achievements) => {
+        if (isMounted) {
+          const unlocked = achievements.filter((a) => a.unlocked);
+          if (unlocked.length > 0) {
+            // Sort by unlockedAt desc if available, else first unlocked
+            setRecentAchievement(unlocked[unlocked.length - 1]);
+          }
+        }
+      })
+      .catch((err) => console.warn('[Home] Failed to load achievements:', err));
+
+    // Subscribe to live active game sessions
+    const unsubSessions = GameSessionService.subscribeToActiveSessions(couple.id, (sessions) => {
+      if (isMounted) {
+        setActiveSessions(sessions);
       }
-    };
-    fetchChallenge();
+    });
+
     return () => {
       isMounted = false;
+      unsubSessions();
     };
   }, [couple?.id]);
 
@@ -292,35 +318,107 @@ export default function HomeScreen() {
           )}
         </AppCard>
 
-        {/* Pending Partner Actions Card */}
-        <AppCard style={styles.pendingActionCard}>
-          <View style={styles.pendingRow}>
-            <View
-              style={[
-                styles.pendingIconBox,
-                { backgroundColor: theme.colors.primaryLight },
-              ]}
-            >
-              <Sparkles size={20} color={theme.colors.primaryDark} />
-            </View>
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={[styles.pendingTitle, { color: theme.colors.textPrimary }]}>
-                Turns Waiting
-              </Text>
-              <Text style={[styles.pendingDesc, { color: theme.colors.textSecondary }]}>
-                Check if your partner has made a move in your active games.
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => router.push('/(tabs)/activity')}
-              style={styles.pendingArrowBtn}
-            >
-              <ArrowRight size={18} color={theme.colors.primary} />
-            </TouchableOpacity>
-          </View>
-        </AppCard>
+        {/* Dynamic Real-Time Active Match / Pending Turns Card */}
+        {activeSessions.length > 0 ? (() => {
+          const topSession = activeSessions[0];
+          const gameDef = GAME_CATALOGUE.find((g) => g.id === topSession.gameId);
+          const isWaitingForMe =
+            topSession.status === 'waiting' &&
+            !topSession.readyPlayers.includes(user?.uid || '');
+          const isMyTurn =
+            topSession.status === 'active' && topSession.currentTurn === user?.uid;
 
-        {/* Recent Milestone / Achievement Highlight */}
+          const title = isWaitingForMe
+            ? `Match Invite: ${gameDef?.name || 'Game'}`
+            : isMyTurn
+            ? `Your Turn: ${gameDef?.name || 'Game'}`
+            : `Active Game: ${gameDef?.name || 'Game'}`;
+
+          const desc = isWaitingForMe
+            ? `${partner?.displayName || 'Your partner'} started a game and is waiting for you!`
+            : isMyTurn
+            ? `It's your move in ${gameDef?.name || 'the match'}!`
+            : `Waiting for ${partner?.displayName || 'your partner'} to make their move.`;
+
+          return (
+            <AppCard style={styles.pendingActionCard}>
+              <View style={styles.pendingRow}>
+                <View
+                  style={[
+                    styles.pendingIconBox,
+                    {
+                      backgroundColor:
+                        isWaitingForMe || isMyTurn
+                          ? theme.colors.primaryLight
+                          : theme.isDark
+                          ? '#2A253C'
+                          : '#F0EEF6',
+                    },
+                  ]}
+                >
+                  <Sparkles
+                    size={20}
+                    color={
+                      isWaitingForMe || isMyTurn
+                        ? theme.colors.primaryDark
+                        : theme.colors.textMuted
+                    }
+                  />
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={[styles.pendingTitle, { color: theme.colors.textPrimary }]}>
+                    {title}
+                  </Text>
+                  <Text style={[styles.pendingDesc, { color: theme.colors.textSecondary }]}>
+                    {desc}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.push({
+                      pathname: '/game',
+                      params: { gameId: topSession.gameId, sessionId: topSession.id },
+                    })
+                  }
+                  style={styles.pendingArrowBtn}
+                >
+                  <ArrowRight size={18} color={theme.colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </AppCard>
+          );
+        })() : (
+          <AppCard style={styles.pendingActionCard}>
+            <View style={styles.pendingRow}>
+              <View
+                style={[
+                  styles.pendingIconBox,
+                  { backgroundColor: theme.colors.primaryLight },
+                ]}
+              >
+                <PlayCircle size={20} color={theme.colors.primaryDark} />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={[styles.pendingTitle, { color: theme.colors.textPrimary }]}>
+                  All Caught Up
+                </Text>
+                <Text style={[styles.pendingDesc, { color: theme.colors.textSecondary }]}>
+                  {partner
+                    ? `Ready to play? Start a match with ${partner.displayName}!`
+                    : 'Pair with your partner to start playing multiplayer games!'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => router.push(partner ? '/(tabs)/games' : '/(onboarding)/pair')}
+                style={styles.pendingArrowBtn}
+              >
+                <ArrowRight size={18} color={theme.colors.primary} />
+              </TouchableOpacity>
+            </View>
+          </AppCard>
+        )}
+
+        {/* Real Recent Milestone / Achievement Highlight */}
         <AppCard style={styles.milestoneHighlightCard}>
           <View style={styles.milestoneRow}>
             <View style={styles.milestoneIcon}>
@@ -328,10 +426,12 @@ export default function HomeScreen() {
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={[styles.milestoneTitle, { color: theme.colors.textPrimary }]}>
-                Recent Achievement
+                {recentAchievement ? 'Recent Milestone' : 'Couple Milestones'}
               </Text>
               <Text style={[styles.milestoneDesc, { color: theme.colors.textSecondary }]}>
-                &quot;Seven Days Together&quot; consistency milestone unlocked!
+                {recentAchievement
+                  ? `"${recentAchievement.title}" milestone unlocked! (+${recentAchievement.rewardXP} XP)`
+                  : 'Play matches and daily challenges together to unlock badges!'}
               </Text>
             </View>
             <TouchableOpacity

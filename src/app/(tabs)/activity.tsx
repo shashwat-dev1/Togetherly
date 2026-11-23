@@ -32,6 +32,7 @@ import {
   Gamepad2,
   Clock,
   RotateCcw,
+  Users,
 } from 'lucide-react-native';
 
 type FilterType = 'all' | 'turns' | 'games' | 'milestones';
@@ -58,15 +59,18 @@ export default function ActivityScreen() {
 
   const [activities, setActivities] = useState<CoupleActivityItem[]>([]);
   const [filter, setFilter] = useState<FilterType>('all');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(Boolean(couple?.id));
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const coupleId = couple?.id || 'cpl_demo_mock_123';
+  const coupleId = couple?.id;
   const partnerId = couple?.memberIds.find((id) => id !== user?.uid);
   const partner = partnerId && couple?.members[partnerId] ? couple.members[partnerId] : null;
 
   useEffect(() => {
     let isMounted = true;
+    if (!coupleId) {
+      return;
+    }
     ActivityService.getActivities(coupleId, 50)
       .then((list) => {
         if (isMounted) {
@@ -85,6 +89,7 @@ export default function ActivityScreen() {
   }, [coupleId]);
 
   const onRefresh = useCallback(async () => {
+    if (!coupleId) return;
     setIsRefreshing(true);
     try {
       const list = await ActivityService.getActivities(coupleId, 50);
@@ -147,6 +152,32 @@ export default function ActivityScreen() {
         return theme.colors.success;
     }
   };
+
+  if (!couple) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.centerContainer}>
+          <Users size={52} color={theme.colors.primary} />
+          <Text style={[styles.title, { color: theme.colors.textPrimary, marginTop: 16 }]}>
+            No Couple Connected
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              { color: theme.colors.textSecondary, textAlign: 'center', marginHorizontal: 28, marginTop: 8 },
+            ]}
+          >
+            Connect with your partner to share a live activity timeline of games, turns, and milestones.
+          </Text>
+          <AppButton
+            title="Pair With Partner"
+            onPress={() => router.push('/(onboarding)/pair')}
+            style={{ marginTop: 24, minWidth: 200 }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>

@@ -4,7 +4,7 @@
  * Implements code generation, deep link sharing via Android native share,
  * clipboard copy, and reciprocal code redemption.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +21,8 @@ import * as Sharing from 'expo-sharing';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useCoupleStore } from '@/stores/useCoupleStore';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { CoupleService } from '@/services/firebase/coupleService';
+import { AuthService } from '@/services/firebase/authService';
 import { AppButton } from '@/components/common/AppButton';
 import { AppTextInput } from '@/components/common/AppTextInput';
 import { Heart, Share2, Copy, Check, Users } from 'lucide-react-native';
@@ -28,13 +31,35 @@ export default function PairScreen() {
   const router = useRouter();
   const { theme } = useThemeStore();
   const { user } = useAuthStore();
-  const { createInvite, pairWithCode, isLoading, error, clearError } = useCoupleStore();
+  const { createInvite, pairWithCode, fetchCouple, isLoading, error, clearError } = useCoupleStore();
 
   const [activeTab, setActiveTab] = useState<'invite' | 'join'>('invite');
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
   const [partnerCode, setPartnerCode] = useState('');
   const [copied, setCopied] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Real-time listener: detect when partner accepts the invitation code
+  useEffect(() => {
+    if (!generatedCode || !user) return;
+    const unsub = CoupleService.subscribeToInvitation(generatedCode, async () => {
+      try {
+        const updatedUser = await AuthService.restoreSession();
+        if (updatedUser?.activeCoupleId) {
+          await fetchCouple(updatedUser.activeCoupleId);
+        }
+        Alert.alert(
+          'Partner Connected!',
+          'Your partner has accepted your invitation! Welcome to your shared space.',
+          [{ text: "Start Playing", onPress: () => router.replace('/(tabs)/home') }]
+        );
+      } catch (err) {
+        console.warn('[PairScreen] Partner acceptance callback error:', err);
+      }
+    });
+
+    return () => unsub();
+  }, [generatedCode, user, fetchCouple, router]);
 
   const handleGenerateCode = async () => {
     if (!user) return;
@@ -238,21 +263,14 @@ export default function PairScreen() {
                   <View
                     style={[
                       styles.waitingNotice,
-                      { backgroundColor: theme.colors.successSoft },
+                      { backgroundColor: theme.colors.successSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
                     ]}
                   >
+                    <ActivityIndicator size="small" color={theme.colors.success} style={{ marginRight: 8 }} />
                     <Text style={{ fontSize: 13, color: theme.colors.success, textAlign: 'center' }}>
-                      ⏳ Code valid for 48 hours. Waiting for partner to accept...
+                      Code valid for 48 hrs. Listening for partner...
                     </Text>
                   </View>
-
-                  <AppButton
-                    title="Simulate Partner Accepted (Preview)"
-                    onPress={() => router.replace('/(tabs)/home')}
-                    variant="ghost"
-                    size="sm"
-                    style={{ marginTop: 14 }}
-                  />
                 </View>
               ) : (
                 <AppButton

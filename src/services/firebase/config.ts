@@ -85,6 +85,15 @@ export function resolveRuntimeMode(): FirebaseRuntimeMode {
     return 'production';
   }
 
+  // In release builds or non-dev environments, mock mode is strictly prohibited
+  if (typeof __DEV__ !== 'undefined' && !__DEV__) {
+    isPilotMisconfigured = true;
+    pilotConfigError =
+      'PRODUCTION CONFIGURATION ERROR: Standalone release APK builds require valid Firebase credentials embedded at build time. Mock mode is disabled in release builds to guarantee data integrity.';
+    console.error(`[Togetherly Firebase] ${pilotConfigError}`);
+    return 'production';
+  }
+
   // Fallback to mock ONLY for local development preview when neither pilot nor emulator was requested
   return 'mock';
 }

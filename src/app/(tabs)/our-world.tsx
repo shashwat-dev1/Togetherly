@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useCoupleStore } from '@/stores/useCoupleStore';
 import { useThemeStore } from '@/stores/useThemeStore';
@@ -33,6 +34,7 @@ import {
   Award,
   CheckCircle2,
   Lock,
+  Users,
 } from 'lucide-react-native';
 
 const TIER_COLORS: Record<AchievementTier, string> = {
@@ -43,6 +45,7 @@ const TIER_COLORS: Record<AchievementTier, string> = {
 };
 
 export default function OurWorldScreen() {
+  const router = useRouter();
   const { theme } = useThemeStore();
   const { user } = useAuthStore();
   const { couple } = useCoupleStore();
@@ -50,14 +53,17 @@ export default function OurWorldScreen() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<AchievementCategory | 'all'>('all');
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(Boolean(couple?.id));
 
-  const coupleId = couple?.id || 'cpl_demo_mock_123';
+  const coupleId = couple?.id;
   const partnerId = couple?.memberIds.find((id) => id !== user?.uid);
   const partner = partnerId && couple?.members[partnerId] ? couple.members[partnerId] : null;
 
   useEffect(() => {
     let isMounted = true;
+    if (!coupleId) {
+      return;
+    }
     AchievementService.getCoupleAchievements(coupleId)
       .then((list) => {
         if (isMounted) {
@@ -92,6 +98,32 @@ export default function OurWorldScreen() {
     if (selectedCategory === 'all') return achievements;
     return achievements.filter((a) => a.category === selectedCategory);
   }, [achievements, selectedCategory]);
+
+  if (!couple) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.centerContainer}>
+          <Users size={52} color={theme.colors.primary} />
+          <Text style={[styles.title, { color: theme.colors.textPrimary, marginTop: 16 }]}>
+            No Couple Connected
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              { color: theme.colors.textSecondary, textAlign: 'center', marginHorizontal: 28, marginTop: 8 },
+            ]}
+          >
+            Pair with your partner to start unlocking shared milestones, leveling up, and tracking achievements together.
+          </Text>
+          <AppButton
+            title="Pair With Partner"
+            onPress={() => router.push('/(onboarding)/pair')}
+            style={{ marginTop: 24, minWidth: 200 }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
@@ -486,6 +518,7 @@ export default function OurWorldScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scrollContent: { padding: 20, paddingBottom: 32 },
   header: { alignItems: 'center', marginVertical: 12 },
   title: { fontSize: 22, fontWeight: '800', marginTop: 12, textAlign: 'center' },

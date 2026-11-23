@@ -37,7 +37,7 @@ import { DrawAndGuessGame } from '@/games/draw-and-guess/DrawAndGuessGame';
 import { ConnectFourGame } from '@/games/connect-four/ConnectFourGame';
 import { MemoryMatchGame } from '@/games/memory-match/MemoryMatchGame';
 import { WordGuessGame } from '@/games/word-guess/WordGuessGame';
-import { ArrowLeft, WifiOff, Users, Play, Heart } from 'lucide-react-native';
+import { ArrowLeft, WifiOff, Users, Heart } from 'lucide-react-native';
 
 export default function GameRunnerScreen() {
   const router = useRouter();
@@ -47,23 +47,28 @@ export default function GameRunnerScreen() {
   const { couple } = useCoupleStore();
 
   const game = GAME_CATALOGUE.find((g) => g.id === gameId) || GAME_CATALOGUE[0];
-  const partnerId = couple?.memberIds.find((id) => id !== user?.uid) || 'usr_partner_demo';
-  const partner = couple?.members[partnerId] || {
-    displayName: 'Partner',
-    avatarId: 'avatar_fox',
-    joinedAt: couple?.createdAt || 1700000000000,
-    isOnline: true,
-  };
+  const partnerId = couple?.memberIds.find((id) => id !== user?.uid);
+  const partner = partnerId && couple?.members[partnerId] ? couple.members[partnerId] : null;
 
   const [activeSessionId, setActiveSessionId] = useState<string | undefined>(initialSessionId);
   const [initError, setInitError] = useState<string | null>(null);
 
-  // Auto-initialize session if none provided in query params
+  // Auto-initialize session or connect to partner's active session
   useEffect(() => {
     let isMounted = true;
     const initSession = async () => {
-      if (activeSessionId || !user || !couple) return;
+      if (activeSessionId || !user || !couple || !partnerId) return;
       try {
+        // Check for existing waiting or active session for this couple & game
+        const existingSession = await GameSessionService.getActiveSessionForCouple(couple.id, game.id);
+        if (existingSession && isMounted) {
+          if (!existingSession.readyPlayers.includes(user.uid)) {
+            await GameSessionService.joinGameSession(existingSession.id, user.uid);
+          }
+          setActiveSessionId(existingSession.id);
+          return;
+        }
+
         const session = await GameSessionService.createGameSession({
           coupleId: couple.id,
           gameId: game.id,
@@ -92,7 +97,6 @@ export default function GameRunnerScreen() {
     error,
     submitAction,
     submitAnswer,
-    joinSession,
     requestRematch,
     abandonSession,
     retryConnection,
@@ -113,6 +117,39 @@ export default function GameRunnerScreen() {
     }
     router.back();
   };
+
+  // --- UNPAIRED CHECK ---
+  if (!user || !couple || !partnerId || !partner) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.centerContainer}>
+          <Users size={52} color={theme.colors.primary} />
+          <Text style={[styles.loadingTitle, { color: theme.colors.textPrimary, marginTop: 16 }]}>
+            Partner Pairing Required
+          </Text>
+          <Text
+            style={[
+              styles.loadingSubtitle,
+              { color: theme.colors.textSecondary, textAlign: 'center', marginHorizontal: 28, marginTop: 6 },
+            ]}
+          >
+            Togetherly games are played in real-time between two connected partners. Pair your account to start playing.
+          </Text>
+          <AppButton
+            title="Invite or Connect Partner"
+            onPress={() => router.push('/(onboarding)/pair')}
+            style={{ marginTop: 24, minWidth: 220 }}
+          />
+          <AppButton
+            title="Return to Games"
+            variant="ghost"
+            onPress={() => router.back()}
+            style={{ marginTop: 10 }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   // --- LOADING / INITIALIZING STATE ---
   if (!activeSessionId || (connectionState === 'connecting' && !session)) {
@@ -240,15 +277,13 @@ export default function GameRunnerScreen() {
             Match session created! Once {partner.displayName} opens this game on their device, the match will begin automatically.
           </Text>
 
-          {/* Developer Quick Simulation Button for local tests */}
-          <AppButton
-            title={`Simulate ${partner.displayName} Ready`}
-            onPress={joinSession}
-            variant="outline"
-            size="sm"
-            icon={<Play size={14} color={theme.colors.primary} fill={theme.colors.primary} />}
-            style={{ marginTop: 24 }}
-          />
+          {/* Live waiting indicator */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 24 }}>
+            <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginRight: 8 }} />
+            <Text style={{ fontSize: 13, color: theme.colors.textMuted, fontWeight: '600' }}>
+              Listening for partner join...
+            </Text>
+          </View>
         </View>
       )}
 

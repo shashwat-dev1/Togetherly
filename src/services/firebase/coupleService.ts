@@ -320,6 +320,34 @@ export const CoupleService = {
     return () => {};
   },
 
+  /**
+   * Subscribes to real-time invitation document updates so creator's phone detects partner pairing immediately.
+   */
+  subscribeToInvitation(
+    code: string,
+    onAccepted: (claimedBy: string) => void,
+    onError?: (err: Error) => void
+  ): Unsubscribe {
+    if (isFirebaseConfigured && db) {
+      const inviteRef = doc(db, 'invitations', code.trim().toUpperCase());
+      return onSnapshot(
+        inviteRef,
+        (snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data.status === 'accepted' && data.claimedBy) {
+              onAccepted(data.claimedBy);
+            }
+          }
+        },
+        (err) => {
+          if (onError) onError(err);
+        }
+      );
+    }
+    return () => {};
+  },
+
   async disconnectCouple(coupleId?: string | null): Promise<void> {
     if (isFirebaseConfigured && db && coupleId) {
       const firestore = db;

@@ -32,6 +32,11 @@ import {
   collection,
   runTransaction,
   Unsubscribe,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
 } from 'firebase/firestore';
 
 // --- IN-MEMORY REACTIVE STORE FOR MOCK MODE ---
@@ -809,6 +814,110 @@ export const GameSessionService = {
     }
 
     return session;
+  },
+
+  /**
+   * 11. GET ACTIVE SESSIONS FOR COUPLE
+   * Discovers existing waiting or active sessions for matchmaking.
+   */
+  async getActiveSessionForCouple(coupleId: string, gameId?: string): Promise<GameSession | null> {
+    const now = Date.now();
+
+    if (runtimeMode === 'production' || runtimeMode === 'emulator') {
+      if (!db) throw new Error('Firestore is not initialized');
+      const sessionsCol = collection(db, 'gameSessions');
+      const q = query(
+        sessionsCol,
+        where('coupleId', '==', coupleId),
+        where('status', 'in', ['waiting', 'active', 'ready']),
+        orderBy('updatedAt', 'desc'),
+        limit(10)
+      );
+
+      const snap = await getDocs(q);
+      for (const docSnap of snap.docs) {
+        const data = docSnap.data();
+        if (data.expiresAt && data.expiresAt < now) continue;
+        if (!gameId || data.gameId === gameId) {
+          return {
+            id: docSnap.id,
+            ...data,
+            createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt || now,
+            updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : data.updatedAt || now,
+          } as GameSession;
+        }
+      }
+      return null;
+    }
+
+    // Mock Mode
+    for (const session of Array.from(mockSessions.values()).reverse()) {
+      if (session.coupleId === coupleId && ['waiting', 'active', 'ready'].includes(session.status)) {
+        if (session.expiresAt && session.expiresAt < now) continue;
+        if (!gameId || session.gameId === gameId) {
+          return session;
+        }
+      }
+    }
+    return null;
+  },
+
+  /**
+   * 12. SUBSCRIBE TO ACTIVE SESSIONS FOR COUPLE
+   * Real-time listener for lobby invitations and active turns.
+   */
+  subscribeToActiveSessions(
+    coupleId: string,
+    callback: (sessions: GameSession[]) => void
+  ): Unsubscribe {
+    if (runtimeMode === 'production' || runtimeMode === 'emulator') {
+      if (!db) throw new Error('Firestore is not initialized');
+      const sessionsCol = collection(db, 'gameSessions');
+      const q = query(
+        sessionsCol,
+        where('coupleId', '==', coupleId),
+        where('status', 'in', ['waiting', 'active', 'ready']),
+        orderBy('updatedAt', 'desc'),
+        limit(5)
+      );
+
+      return onSnapshot(
+        q,
+        (snapshot) => {
+          const currentTimestamp = Date.now();
+          const active = snapshot.docs
+            .map((d) => {
+              const data = d.data();
+              return {
+                id: d.id,
+                ...data,
+                createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt || currentTimestamp,
+                updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : data.updatedAt || currentTimestamp,
+              } as GameSession;
+            })
+            .filter((s) => !s.expiresAt || s.expiresAt > currentTimestamp);
+          callback(active);
+        },
+        (err) => {
+          console.warn('[GameSessionService] subscribeToActiveSessions error:', err);
+        }
+      );
+    }
+
+    // Mock Mode
+    const notify = () => {
+      const currentTimestamp = Date.now();
+      const active = Array.from(mockSessions.values()).filter(
+        (s) =>
+          s.coupleId === coupleId &&
+          ['waiting', 'active', 'ready'].includes(s.status) &&
+          (!s.expiresAt || s.expiresAt > currentTimestamp)
+      );
+      callback(active);
+    };
+
+    notify();
+    return () => {};
   },
 
   /**
