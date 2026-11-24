@@ -56,6 +56,11 @@ example
 /ios
 /android
 
+# Release binaries
+releases/
+*.apk
+*.aab
+
 # Firebase functions build
 functions/lib/
 functions/node_modules/
