@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Expo build artifacts
+.expo/
+dist/
+web-build/
+.eas/
+
+# Native folders (Continuous Native Generation generates android/ on EAS build)
+android/
+ios/
+
+# Private service account keys and debug logs
+*serviceAccountKey*.json
+*service-account*.json
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# Git and OS
+.git/
+.DS_Store
+
+# Explicitly include google-services.json for EAS native Android build
+!google-services.json

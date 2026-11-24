@@ -30,6 +30,23 @@
         "EXPO_PUBLIC_FIREBASE_MODE": "production"
       }
     },
+    "production-apk": {
+      "developmentClient": false,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_FIREBASE_MODE": "production",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDNpl4-gMCRntDZK6UIJIyWptuG3nHwBro",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "togetherly-17397.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "togetherly-17397",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "togetherly-17397.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "989877180170",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:989877180170:web:19a17f279cefa252c24cf3"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "android": {
