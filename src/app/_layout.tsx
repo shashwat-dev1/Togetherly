@@ -57,6 +57,13 @@ export default function RootLayout() {
               presentation: 'card',
             }} 
           />
+          <Stack.Screen 
+            name="settings/notifications" 
+            options={{ 
+              headerShown: false,
+              presentation: 'card',
+            }} 
+          />
         </Stack>
       </SafeAreaProvider>
     </QueryClientProvider>

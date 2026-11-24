@@ -29,6 +29,11 @@ import { DailyChallengeService } from '@/services/engagement/dailyChallengeServi
 import { calculateLevelFromXP } from '@/services/engagement/xpProgressionService';
 import { GameSessionService } from '@/services/firebase/gameSessionService';
 import { AchievementService } from '@/services/engagement/achievementService';
+import { NotificationService, InAppNotification } from '@/services/notifications/notificationService';
+import { PermissionManager } from '@/services/notifications/permissionManager';
+import { scheduleRomanticReminders } from '@/services/notifications/localScheduler';
+import * as Notifications from 'expo-notifications';
+import * as Clipboard from 'expo-clipboard';
 import {
   Flame,
   Sparkles,
@@ -40,13 +45,17 @@ import {
   Trophy,
   ArrowRight,
   Gift,
+  Heart,
+  X,
+  Share2,
+  Copy,
 } from 'lucide-react-native';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { theme } = useThemeStore();
   const { user } = useAuthStore();
-  const { couple, updateSharedXP } = useCoupleStore();
+  const { couple, activeInvitation, checkActiveInvite, cancelInvite, updateSharedXP } = useCoupleStore();
 
   const partnerId = couple?.memberIds.find((id) => id !== user?.uid);
   const partner = partnerId && couple?.members[partnerId] ? couple.members[partnerId] : null;
@@ -65,6 +74,52 @@ export default function HomeScreen() {
   // Real-Time Active Sessions & Achievements State
   const [activeSessions, setActiveSessions] = useState<GameSession[]>([]);
   const [recentAchievement, setRecentAchievement] = useState<Achievement | null>(null);
+
+  // In-App Notification Toast State & Invite Copy State
+  const [incomingToast, setIncomingToast] = useState<InAppNotification | null>(null);
+  const [copiedInvite, setCopiedInvite] = useState(false);
+
+  // Notification Lifecycle & Device Token Registration
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    // 1. Safe device token registration (Spark-compliant)
+    PermissionManager.registerDeviceTokenSafely(user.uid).catch(() => {});
+
+    // 2. Schedule local romantic reminders based on user preferences
+    scheduleRomanticReminders(user.preferences, partner?.displayName).catch(() => {});
+
+    // 3. Real-time in-app notification subscriber
+    const unsubNotifs = NotificationService.subscribeToInAppNotifications(user.uid, (notif) => {
+      setIncomingToast(notif);
+      NotificationService.markNotificationAsRead(notif.id).catch(() => {});
+    });
+
+    // 4. Response listener for background notification tap
+    const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
+      NotificationService.handleNotificationResponse(response, router);
+    });
+
+    return () => {
+      unsubNotifs();
+      responseSub.remove();
+    };
+  }, [user?.uid, user?.preferences, partner?.displayName, router]);
+
+  // Auto-dismiss in-app notification banner after 4.5 seconds
+  useEffect(() => {
+    if (!incomingToast) return;
+    const timer = setTimeout(() => {
+      setIncomingToast(null);
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, [incomingToast]);
+
+  // Check pending invite on mount if partner is not yet paired
+  useEffect(() => {
+    if (!user?.uid || partner) return;
+    checkActiveInvite(user.uid);
+  }, [user?.uid, partner, checkActiveInvite]);
 
   useEffect(() => {
     let isMounted = true;
@@ -143,6 +198,41 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+      {/* Floating In-App Real-time Notification Banner */}
+      {incomingToast && (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => {
+            const route = NotificationService.getRouteForNotification(incomingToast.type, incomingToast.data);
+            setIncomingToast(null);
+            router.push(route as any);
+          }}
+          style={[
+            styles.toastBanner,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.primary,
+            },
+            theme.shadows.medium,
+          ]}
+        >
+          <View style={[styles.toastIcon, { backgroundColor: theme.colors.primaryLight }]}>
+            <Heart size={18} color={theme.colors.primaryDark} fill={theme.colors.primaryDark} />
+          </View>
+          <View style={{ flex: 1, marginHorizontal: 10 }}>
+            <Text style={[styles.toastTitle, { color: theme.colors.textPrimary }]} numberOfLines={1}>
+              {incomingToast.title}
+            </Text>
+            <Text style={[styles.toastBody, { color: theme.colors.textSecondary }]} numberOfLines={2}>
+              {incomingToast.body}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => setIncomingToast(null)} style={{ padding: 4 }}>
+            <X size={18} color={theme.colors.textMuted} />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
+
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Top Couple Presence Header */}
         <View style={styles.headerRow}>
@@ -317,6 +407,64 @@ export default function HomeScreen() {
             />
           )}
         </AppCard>
+
+        {/* Event 3: Persistent Waiting-For-Partner Card */}
+        {!partner && activeInvitation && (
+          <AppCard elevated style={[styles.waitingCard, { borderColor: theme.colors.primary, borderWidth: 1.5 }]}>
+            <View style={styles.waitingHeader}>
+              <View style={[styles.waitingIconBubble, { backgroundColor: theme.colors.primaryLight }]}>
+                <Heart size={20} color={theme.colors.primaryDark} fill={theme.colors.primaryDark} />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={[styles.waitingTitle, { color: theme.colors.textPrimary }]}>
+                  Waiting for your person 💌
+                </Text>
+                <Text style={[styles.waitingSubtitle, { color: theme.colors.textSecondary }]}>
+                  Share code {activeInvitation.code} with your partner to start your shared world.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.waitingCodeRow}>
+              <View style={[styles.waitingCodeBox, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+                <Text style={[styles.waitingCodeText, { color: theme.colors.primaryDark }]}>
+                  {activeInvitation.code}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.waitingBtn, { backgroundColor: theme.colors.primary }]}
+                onPress={async () => {
+                  await Clipboard.setStringAsync(activeInvitation.code);
+                  setCopiedInvite(true);
+                  setTimeout(() => setCopiedInvite(false), 2000);
+                }}
+              >
+                <Copy size={16} color="#FFFFFF" />
+                <Text style={styles.waitingBtnText}>{copiedInvite ? 'Copied!' : 'Copy'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.waitingBtn, { backgroundColor: theme.colors.primaryDark, marginLeft: 8 }]}
+                onPress={() => router.push('/(onboarding)/pair')}
+              >
+                <Share2 size={16} color="#FFFFFF" />
+                <Text style={styles.waitingBtnText}>Share</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.waitingPulseRow}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <Text style={[styles.waitingPulseText, { color: theme.colors.textMuted }]}>
+                Expires in 48 hours • Waiting for partner...
+              </Text>
+              <TouchableOpacity
+                onPress={() => user && cancelInvite(user.uid)}
+                style={{ marginLeft: 'auto' }}
+              >
+                <Text style={{ fontSize: 13, color: theme.colors.error, fontWeight: '600' }}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </AppCard>
+        )}
 
         {/* Dynamic Real-Time Active Match / Pending Turns Card */}
         {activeSessions.length > 0 ? (() => {
@@ -619,4 +767,97 @@ const styles = StyleSheet.create({
   },
   premiumTitle: { fontSize: 16, fontWeight: '700' },
   premiumDesc: { fontSize: 12, lineHeight: 16, marginTop: 2 },
+  toastBanner: {
+    position: 'absolute',
+    top: 50,
+    left: 16,
+    right: 16,
+    zIndex: 9999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    elevation: 8,
+  },
+  toastIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toastTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  toastBody: {
+    fontSize: 12,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  waitingCard: {
+    padding: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+  },
+  waitingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  waitingIconBubble: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  waitingTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  waitingSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  waitingCodeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 14,
+  },
+  waitingCodeBox: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginRight: 10,
+  },
+  waitingCodeText: {
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: 2,
+  },
+  waitingBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 6,
+  },
+  waitingBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  waitingPulseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  waitingPulseText: {
+    fontSize: 12,
+    marginLeft: 8,
+  },
 });

@@ -38,6 +38,7 @@ import {
   Trophy,
   Flame,
   MessageSquare,
+  Sparkles,
 } from 'lucide-react-native';
 
 export default function ProfileScreen() {
@@ -323,6 +324,27 @@ export default function ProfileScreen() {
                   trackColor={{ false: '#D4CEE0', true: theme.colors.primary }}
                 />
               </View>
+
+              <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
+
+              {/* Granular Romantic & Cheeky Preferences */}
+              <TouchableOpacity
+                style={styles.settingRow}
+                onPress={() => router.push('/settings/notifications' as any)}
+              >
+                <View style={styles.settingIconCol}>
+                  <Sparkles size={20} color={theme.colors.secondary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.settingTitle, { color: theme.colors.textPrimary }]}>
+                    Romantic & Cheeky Preferences
+                  </Text>
+                  <Text style={[styles.settingSubtitle, { color: theme.colors.textSecondary }]}>
+                    Frequencies, quiet hours, flirty opt-ins & discreet preview
+                  </Text>
+                </View>
+                <ChevronRight size={18} color={theme.colors.textMuted} />
+              </TouchableOpacity>
             </>
           ) : null}
         </AppCard>

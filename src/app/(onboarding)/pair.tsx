@@ -31,7 +31,7 @@ export default function PairScreen() {
   const router = useRouter();
   const { theme } = useThemeStore();
   const { user } = useAuthStore();
-  const { createInvite, pairWithCode, fetchCouple, isLoading, error, clearError } = useCoupleStore();
+  const { createInvite, cancelInvite, checkActiveInvite, pairWithCode, fetchCouple, isLoading, error, clearError } = useCoupleStore();
 
   const [activeTab, setActiveTab] = useState<'invite' | 'join'>('invite');
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
@@ -39,7 +39,17 @@ export default function PairScreen() {
   const [copied, setCopied] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Real-time listener: detect when partner accepts the invitation code
+  // Check for existing pending invitation on mount
+  useEffect(() => {
+    if (!user) return;
+    checkActiveInvite(user.uid).then((inv) => {
+      if (inv) {
+        setGeneratedCode(inv.code);
+      }
+    });
+  }, [user, checkActiveInvite]);
+
+  // Real-time listener: detect when partner accepts the invitation code (Event 2)
   useEffect(() => {
     if (!generatedCode || !user) return;
     const unsub = CoupleService.subscribeToInvitation(generatedCode, async () => {
@@ -49,9 +59,9 @@ export default function PairScreen() {
           await fetchCouple(updatedUser.activeCoupleId);
         }
         Alert.alert(
-          'Partner Connected!',
-          'Your partner has accepted your invitation! Welcome to your shared space.',
-          [{ text: "Start Playing", onPress: () => router.replace('/(tabs)/home') }]
+          'Your person is here! ❤️',
+          'The wait is over. Your little world is officially connected.',
+          [{ text: 'Enter Togetherly', onPress: () => router.replace('/(tabs)/home') }]
         );
       } catch (err) {
         console.warn('[PairScreen] Partner acceptance callback error:', err);
@@ -92,6 +102,29 @@ export default function PairScreen() {
       await Clipboard.setStringAsync(shareMessage);
       Alert.alert('Invitation Copied', 'Copied to clipboard! Send it to your partner via WhatsApp or SMS.');
     }
+  };
+
+  const handleCancelInvite = async () => {
+    if (!user) return;
+    Alert.alert(
+      'Cancel Invitation?',
+      'Are you sure you want to cancel this pending invitation? Your partner will not be able to use this code.',
+      [
+        { text: 'Keep Active', style: 'cancel' },
+        {
+          text: 'Cancel Invite',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await cancelInvite(user.uid);
+              setGeneratedCode(null);
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'Failed to cancel invitation');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleJoinWithCode = async () => {
@@ -211,10 +244,12 @@ export default function PairScreen() {
           {activeTab === 'invite' ? (
             <View>
               <Text style={[styles.cardTitle, { color: theme.colors.textPrimary }]}>
-                Share Your Unique Code
+                {generatedCode ? 'Waiting for your person ❤️' : 'Share Your Unique Code'}
               </Text>
               <Text style={[styles.cardDesc, { color: theme.colors.textSecondary }]}>
-                Generate an invitation code. Send it to your partner to link both of your devices automatically.
+                {generatedCode
+                  ? 'Your invite is ready. Share it with your partner to start your little world together.'
+                  : 'Generate an invitation code. Send it to your partner to link both of your devices automatically.'}
               </Text>
 
               {generatedCode ? (
@@ -268,9 +303,18 @@ export default function PairScreen() {
                   >
                     <ActivityIndicator size="small" color={theme.colors.success} style={{ marginRight: 8 }} />
                     <Text style={{ fontSize: 13, color: theme.colors.success, textAlign: 'center' }}>
-                      Code valid for 48 hrs. Listening for partner...
+                      Expires in 48 hours • Listening for your partner...
                     </Text>
                   </View>
+
+                  <TouchableOpacity
+                    onPress={handleCancelInvite}
+                    style={{ marginTop: 14, alignSelf: 'center', paddingVertical: 6 }}
+                  >
+                    <Text style={{ fontSize: 14, color: theme.colors.error, fontWeight: '600' }}>
+                      Cancel Invitation
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               ) : (
                 <AppButton

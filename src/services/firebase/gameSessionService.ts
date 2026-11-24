@@ -177,6 +177,13 @@ export const GameSessionService = {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+      NotificationService.sendNotification({
+        toUid: partnerPlayerId,
+        type: 'game_invitation',
+        title: 'Game Night! 🎮',
+        body: `Your partner wants to play ${gameId.replace(/-/g, ' ')}! Are you ready?`,
+        data: { gameId, sessionId },
+      }).catch(() => {});
       return newSession;
     }
 
@@ -184,6 +191,13 @@ export const GameSessionService = {
     mockSessions.set(sessionId, newSession);
     mockPrivateAnswers.set(sessionId, new Map());
     notifyMockSubscribers(sessionId, newSession);
+    NotificationService.sendNotification({
+      toUid: partnerPlayerId,
+      type: 'game_invitation',
+      title: 'Game Night! 🎮',
+      body: `Your partner wants to play ${gameId.replace(/-/g, ' ')}! Are you ready?`,
+      data: { gameId, sessionId },
+    }).catch(() => {});
     return newSession;
   },
 
@@ -221,6 +235,16 @@ export const GameSessionService = {
           updatedAt: serverTimestamp(),
         });
       });
+      const otherPlayer = session.playerIds.find((id) => id !== playerId);
+      if (otherPlayer) {
+        NotificationService.sendNotification({
+          toUid: otherPlayer,
+          type: 'partner_joined',
+          title: 'Partner joined! 💕',
+          body: `Your partner joined! Let's see who knows who best.`,
+          data: { gameId: session.gameId, sessionId: session.id },
+        }).catch(() => {});
+      }
       return { ...session, readyPlayers: updatedReady, status: newStatus, updatedAt: Date.now() };
     }
 
@@ -230,6 +254,16 @@ export const GameSessionService = {
     session.updatedAt = Date.now();
     mockSessions.set(sessionId, session);
     notifyMockSubscribers(sessionId, session);
+    const otherPlayer = session.playerIds.find((id) => id !== playerId);
+    if (otherPlayer) {
+      NotificationService.sendNotification({
+        toUid: otherPlayer,
+        type: 'partner_joined',
+        title: 'Partner joined! 💕',
+        body: `Your partner joined! Let's see who knows who best.`,
+        data: { gameId: session.gameId, sessionId: session.id },
+      }).catch(() => {});
+    }
     return session;
   },
 
@@ -539,6 +573,13 @@ export const GameSessionService = {
         submittedPlayers: [playerId],
       };
       updatedSession.updatedAt = Date.now();
+      NotificationService.sendNotification({
+        toUid: partnerId,
+        type: 'answers_ready',
+        title: 'Partner answered! 💭',
+        body: `Your partner submitted their answer! Your turn to guess.`,
+        data: { gameId: session.gameId, sessionId: session.id, round: String(round) },
+      }).catch(() => {});
     } else {
       // BOTH SUBMITTED: Reveal and calculate round scores!
       const player1Id = session.playerIds[0];
@@ -781,9 +822,23 @@ export const GameSessionService = {
         rematchRequestedBy: playerId,
         updatedAt: serverTimestamp(),
       });
+      NotificationService.sendNotification({
+        toUid: partnerId,
+        type: 'rematch_requested',
+        title: 'Rematch requested! 🔥',
+        body: `Your partner wants a rematch in ${previous.gameId.replace(/-/g, ' ')}! Ready?`,
+        data: { gameId: previous.gameId, sessionId: newSession.id },
+      }).catch(() => {});
     } else {
       mockSessions.set(sessionId, previous);
       notifyMockSubscribers(sessionId, previous);
+      NotificationService.sendNotification({
+        toUid: partnerId,
+        type: 'rematch_requested',
+        title: 'Rematch requested! 🔥',
+        body: `Your partner wants a rematch in ${previous.gameId.replace(/-/g, ' ')}! Ready?`,
+        data: { gameId: previous.gameId, sessionId: newSession.id },
+      }).catch(() => {});
     }
 
     return newSession;

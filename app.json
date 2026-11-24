@@ -36,6 +36,13 @@
       "expo-router",
       "expo-web-browser",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#9275E8"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#9275E8",

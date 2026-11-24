@@ -7,6 +7,7 @@
  */
 import { CoupleProfile, CoupleInvitation, UserProfile } from '@/types';
 import { db, isFirebaseConfigured, runtimeMode } from './config';
+import { NotificationService } from '@/services/notifications/notificationService';
 import {
   doc,
   getDoc,
@@ -17,6 +18,10 @@ import {
   serverTimestamp,
   Timestamp,
   Unsubscribe,
+  collection,
+  query,
+  where,
+  getDocs,
 } from 'firebase/firestore';
 
 // Pre-seeded couple profile for development preview
@@ -205,6 +210,15 @@ export const CoupleService = {
           updatedAt: serverTimestamp(),
         });
 
+        // 5. Notify partner about successful connection (Event 2)
+        NotificationService.sendNotification({
+          toUid: partnerId,
+          type: 'partner_accepted',
+          title: 'Your person is here! ❤️',
+          body: 'The wait is over. Your little world is officially connected.',
+          data: { coupleId },
+        }).catch(() => {});
+
         return newCouple;
       });
     }
@@ -262,7 +276,80 @@ export const CoupleService = {
       invite.claimedAt = Date.now();
     }
 
+    // Notify partner in mock mode too
+    NotificationService.sendNotification({
+      toUid: partnerId,
+      type: 'partner_accepted',
+      title: 'Your person is here! ❤️',
+      body: 'The wait is over. Your little world is officially connected.',
+      data: { coupleId },
+    }).catch(() => {});
+
     return newCouple;
+  },
+
+  /**
+   * Cancels an active pending invitation.
+   */
+  async cancelInvitation(code: string, userId: string): Promise<void> {
+    const normalizedCode = code.trim().toUpperCase();
+    if (isFirebaseConfigured && db) {
+      const inviteRef = doc(db, 'invitations', normalizedCode);
+      const snap = await getDoc(inviteRef);
+      if (snap.exists() && snap.data().createdBy === userId) {
+        await updateDoc(inviteRef, {
+          status: 'cancelled',
+          cancelledAt: serverTimestamp(),
+        });
+      }
+      return;
+    }
+
+    const invite = mockInvitations[normalizedCode];
+    if (invite && invite.createdBy === userId) {
+      invite.status = 'cancelled';
+    }
+  },
+
+  /**
+   * Checks if the user has an active pending invitation created by them.
+   */
+  async getActiveInvitationForUser(userId: string): Promise<CoupleInvitation | null> {
+    if (isFirebaseConfigured && db) {
+      try {
+        const q = query(
+          collection(db, 'invitations'),
+          where('createdBy', '==', userId),
+          where('status', '==', 'pending')
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const docSnap = snap.docs[0];
+          const data = docSnap.data();
+          const expiresAt = data.expiresAt?.toMillis ? data.expiresAt.toMillis() : (data.expiresAt || 0);
+          if (Date.now() < expiresAt) {
+            return {
+              id: docSnap.id,
+              code: data.code,
+              createdBy: data.createdBy,
+              creatorName: data.creatorName,
+              creatorAvatarId: data.creatorAvatarId,
+              status: 'pending',
+              createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : Date.now(),
+              expiresAt,
+            };
+          }
+        }
+      } catch (err) {
+        console.warn('[CoupleService] getActiveInvitationForUser warning:', err);
+      }
+      return null;
+    }
+
+    const found = Object.values(mockInvitations).find(
+      (inv) => inv.createdBy === userId && inv.status === 'pending' && Date.now() < inv.expiresAt
+    );
+    return found || null;
   },
 
   /**

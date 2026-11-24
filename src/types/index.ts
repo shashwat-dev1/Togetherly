@@ -5,13 +5,25 @@ import { z } from 'zod';
 
 export type AccountStatus = 'active' | 'suspended' | 'deleted';
 export type ThemeMode = 'light' | 'dark' | 'system';
+export type ReminderFrequency = 'off' | 'light' | 'normal' | 'frequent';
 
 export interface UserPreferences {
   notificationsEnabled: boolean;
+  notifyCoupleActivity?: boolean;
+  notifyGameInvitations?: boolean;
   notifyTurnReady?: boolean;
   notifyDailyChallenge?: boolean;
   notifyAchievements?: boolean;
   notifyStreakReminder?: boolean;
+  notifyRomanticReminders?: boolean;
+  notifyCheesy?: boolean;
+  notifyFlirty?: boolean; // Default false (opt-in)
+  notifyDoubleMeaning?: boolean; // Default false (opt-in)
+  reminderFrequency?: ReminderFrequency;
+  quietHoursEnabled?: boolean;
+  quietHoursStart?: string; // 'HH:mm', e.g. '22:00'
+  quietHoursEnd?: string; // 'HH:mm', e.g. '09:00'
+  discreetPreviews?: boolean;
   soundEnabled: boolean;
   hapticsEnabled: boolean;
   matureContentAllowed: boolean;
@@ -65,7 +77,7 @@ export interface CoupleProfile {
   subscriptionSummary: SubscriptionSummary;
 }
 
-export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'revoked';
+export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'revoked' | 'cancelled';
 
 export interface CoupleInvitation {
   id: string;
@@ -253,13 +265,18 @@ export interface XPTransaction {
 export type NotificationType = 
   | 'partner_invited'
   | 'partner_accepted'
+  | 'game_invitation'
+  | 'partner_joined'
   | 'your_turn'
   | 'partner_moved'
+  | 'answers_ready'
   | 'game_completed'
+  | 'rematch_requested'
   | 'daily_challenge_available'
   | 'challenge_completed'
   | 'achievement_unlocked'
-  | 'level_unlocked';
+  | 'level_unlocked'
+  | 'romantic_reminder';
 
 // Zod Validation Schemas
 export const RegisterSchema = z.object({

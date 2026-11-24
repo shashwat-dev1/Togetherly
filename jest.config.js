@@ -8,6 +8,8 @@ module.exports = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^expo-notifications$': '<rootDir>/src/__mocks__/expo-notifications.ts',
+    '^react-native$': '<rootDir>/src/__mocks__/react-native.ts',
   },
 };
 

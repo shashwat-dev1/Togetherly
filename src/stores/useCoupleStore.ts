@@ -13,11 +13,14 @@ interface CoupleState {
   error: string | null;
   fetchCouple: (coupleId?: string | null) => Promise<void>;
   createInvite: (user: UserProfile) => Promise<CoupleInvitation>;
+  cancelInvite: (userId: string) => Promise<void>;
+  checkActiveInvite: (userId: string) => Promise<CoupleInvitation | null>;
   pairWithCode: (code: string, user: UserProfile) => Promise<CoupleProfile>;
   disconnect: () => Promise<void>;
   updateSharedXP: (newXP: number, newLevel: number) => void;
   updateStreak: (streakData: any) => void;
   setCouple: (couple: CoupleProfile | null) => void;
+  setActiveInvitation: (invitation: CoupleInvitation | null) => void;
   clearError: () => void;
 }
 
@@ -46,6 +49,24 @@ export const useCoupleStore = create<CoupleState>((set, get) => ({
     } catch (err: any) {
       set({ error: err.message || 'Failed to create invitation', isLoading: false });
       throw err;
+    }
+  },
+
+  cancelInvite: async (userId: string) => {
+    const invite = get().activeInvitation;
+    if (invite) {
+      await CoupleService.cancelInvitation(invite.code, userId);
+      set({ activeInvitation: null });
+    }
+  },
+
+  checkActiveInvite: async (userId: string) => {
+    try {
+      const activeInvitation = await CoupleService.getActiveInvitationForUser(userId);
+      set({ activeInvitation });
+      return activeInvitation;
+    } catch {
+      return null;
     }
   },
 
@@ -94,5 +115,6 @@ export const useCoupleStore = create<CoupleState>((set, get) => ({
   },
 
   setCouple: (couple) => set({ couple }),
+  setActiveInvitation: (activeInvitation) => set({ activeInvitation }),
   clearError: () => set({ error: null }),
 }));
