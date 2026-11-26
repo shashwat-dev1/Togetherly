@@ -5,6 +5,10 @@ node_modules/
 .expo/
 dist/
 web-build/
+releases/
+*.apk
+.env
+.env.*
 .eas/
 
 # Native folders (Continuous Native Generation generates android/ on EAS build)

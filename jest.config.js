@@ -7,6 +7,7 @@ module.exports = {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
   },
   moduleNameMapper: {
+    '^expo-crypto$': '<rootDir>/src/__mocks__/expo-crypto.js',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^expo-notifications$': '<rootDir>/src/__mocks__/expo-notifications.ts',
     '^react-native$': '<rootDir>/src/__mocks__/react-native.ts',

@@ -1,12 +1,27 @@
 /**
  * TOGETHERLY — MODULAR GAME REGISTRY
  *
- * Central definition of all 10 multiplayer couples games.
+ * Central definition of multiplayer couples games.
  * Defines gameplay modes, duration, instructions, and implementation status.
  */
 import { GameDefinition } from '@/types';
 
 export const GAME_CATALOGUE: GameDefinition[] = [
+  {
+    id: 'last-heart',
+    name: 'Last Heart',
+    tagline: 'Think ahead and take the final heart',
+    category: 'mini_action',
+    categoryLabel: 'Strategy Duel',
+    iconName: 'Sparkles',
+    gameMode: 'turn_based',
+    estimatedMinutes: 2,
+    isPremium: false,
+    isImplemented: true,
+    description: 'A quick strategy duel for two partners with live turns.',
+    instructions: ['Take one, two or three hearts on your turn.', 'Take the final heart to win.'],
+    rulesSummary: '15 hearts · Live turns · Instant rematch',
+  },
   {
     id: 'who-knows-whom',
     name: 'Who Knows Whom Better?',

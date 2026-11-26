@@ -2,7 +2,7 @@
  * TOGETHERLY — APP ENTRY GATEWAY & ROUTE GUARD
  */
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Image, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useCoupleStore } from '@/stores/useCoupleStore';
@@ -58,14 +58,18 @@ export default function IndexScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ActivityIndicator size="large" color={theme.colors.primary} />
+      <Image source={require('../../assets/images/togetherly-brand.png')} style={styles.brand} accessibilityLabel="Togetherly" />
+      <ActivityIndicator size="small" color={theme.colors.primary} />
+      <Text style={{ color: theme.colors.textSecondary }}>Connecting your little world…</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  brand: { width: 156, height: 156, borderRadius: 32, marginBottom: 4 },
   container: {
     flex: 1,
+    gap: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },

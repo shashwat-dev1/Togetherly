@@ -1,7 +1,7 @@
 /**
  * TOGETHERLY — COUPLE PAIRING SCREEN
  *
- * Implements code generation, deep link sharing via Android native share,
+ * Implements code generation, clipboard sharing,
  * clipboard copy, and reciprocal code redemption.
  */
 import React, { useState, useEffect } from 'react';
@@ -17,11 +17,11 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
-import * as Sharing from 'expo-sharing';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useCoupleStore } from '@/stores/useCoupleStore';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { CoupleService } from '@/services/firebase/coupleService';
+import { INVITATION_CODE_LENGTH, InvitationCodeSchema } from '@/types';
 import { AuthService } from '@/services/firebase/authService';
 import { AppButton } from '@/components/common/AppButton';
 import { AppTextInput } from '@/components/common/AppTextInput';
@@ -89,19 +89,10 @@ export default function PairScreen() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleShareLink = async () => {
+  const handleShareCode = async () => {
     if (!generatedCode) return;
-    const shareMessage = `Join me on Togetherly! Two people, one little world. Download the app and enter my pairing code: ${generatedCode}\nOr click: https://togetherly.app/pair?code=${generatedCode}`;
-    
-    const isAvailable = await Sharing.isAvailableAsync();
-    if (isAvailable) {
-      // Create temporary sharing file or fallback to clipboard notice
-      await Clipboard.setStringAsync(shareMessage);
-      Alert.alert('Invitation Copied', 'Invitation link & code copied! Paste and send it to your partner.');
-    } else {
-      await Clipboard.setStringAsync(shareMessage);
-      Alert.alert('Invitation Copied', 'Copied to clipboard! Send it to your partner via WhatsApp or SMS.');
-    }
+    await Clipboard.setStringAsync(`Join me on Togetherly! Enter my pairing code: ${generatedCode}`);
+    Alert.alert('Invitation Copied', 'Paste and send the code directly to your partner.');
   };
 
   const handleCancelInvite = async () => {
@@ -133,8 +124,8 @@ export default function PairScreen() {
     setValidationError(null);
 
     const cleanCode = partnerCode.trim().toUpperCase();
-    if (cleanCode.length !== 6) {
-      setValidationError('Please enter a valid 6-character code');
+    if (!InvitationCodeSchema.safeParse({ code: cleanCode }).success) {
+      setValidationError('Please enter a valid invitation code');
       return;
     }
 
@@ -286,8 +277,8 @@ export default function PairScreen() {
                       style={{ flex: 1, marginRight: 8 }}
                     />
                     <AppButton
-                      title="Share Link"
-                      onPress={handleShareLink}
+                      title="Share Code"
+                      onPress={handleShareCode}
                       variant="primary"
                       size="sm"
                       icon={<Share2 size={16} color="#FFFFFF" />}
@@ -333,7 +324,7 @@ export default function PairScreen() {
                 Enter Partner&apos;s Code
               </Text>
               <Text style={[styles.cardDesc, { color: theme.colors.textSecondary }]}>
-                Paste the 6-character code your partner shared with you.
+                Paste the invitation code your partner shared with you.
               </Text>
 
               {(error || validationError) && (
@@ -350,19 +341,18 @@ export default function PairScreen() {
               )}
 
               <AppTextInput
-                label="6-Character Code"
-                placeholder="e.g. TOGETH"
+                label="Invitation Code"
                 value={partnerCode}
                 onChangeText={(t) => setPartnerCode(t.toUpperCase())}
                 autoCapitalize="characters"
-                maxLength={6}
+                maxLength={INVITATION_CODE_LENGTH}
               />
 
               <AppButton
                 title="Connect Couple"
                 onPress={handleJoinWithCode}
                 loading={isLoading}
-                disabled={partnerCode.length !== 6}
+                disabled={partnerCode.length !== INVITATION_CODE_LENGTH}
                 size="lg"
                 style={{ marginTop: 8 }}
               />
@@ -435,9 +425,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   codeText: {
-    fontSize: 32,
+    fontSize: 16,
+    textAlign: 'center',
     fontWeight: '800',
-    letterSpacing: 8,
+    letterSpacing: 0.5,
   },
   codeActionsRow: {
     flexDirection: 'row',

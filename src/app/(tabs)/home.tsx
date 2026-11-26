@@ -22,6 +22,7 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { CoupleAvatar } from '@/components/common/CoupleAvatar';
 import { AppCard, Badge } from '@/components/common/AppCard';
 import { AppButton } from '@/components/common/AppButton';
+import { TogetherCounter } from '@/features/together/TogetherCounter';
 import { GameCard } from '@/components/games/GameCard';
 import { GAME_CATALOGUE } from '@/games/registry';
 import { GameDefinition, DailyChallenge, CoupleDailyChallengeProgress, GameSession, Achievement } from '@/types';
@@ -271,6 +272,8 @@ export default function HomeScreen() {
         </View>
 
         {/* Couple Progression Banner (Streak + Shared XP + Level Title) */}
+        {couple && <TogetherCounter key={couple.id} coupleId={couple.id} />}
+
         <AppCard elevated style={styles.progressionCard}>
           <View style={styles.progressionStatsRow}>
             {/* Streak */}

@@ -1,12 +1,20 @@
 /**
  * TOGETHERLY — COUPLE & INVITATION SERVICE
  *
- * Implements atomic pairing, 6-character code generation,
+ * Implements atomic pairing, secure code generation,
  * 48-hour expiration checks, Firestore real-time partner synchronization,
  * and offline/mock mode fallback.
  */
-import { CoupleProfile, CoupleInvitation, UserProfile } from '@/types';
-import { db, isFirebaseConfigured, runtimeMode } from './config';
+import {
+  CoupleProfile,
+  CoupleInvitation,
+  UserProfile,
+  INVITATION_CODE_ALPHABET,
+  INVITATION_CODE_LENGTH,
+  InvitationCodeSchema,
+} from '@/types';
+import { getRandomValues } from 'expo-crypto';
+import { auth, db, isFirebaseConfigured, runtimeMode } from './config';
 import { NotificationService } from '@/services/notifications/notificationService';
 import {
   doc,
@@ -63,16 +71,9 @@ let mockCouple: CoupleProfile | null = {
 const mockInvitations: Record<string, CoupleInvitation> = {};
 
 export const CoupleService = {
-  /**
-   * Generates a random uppercase 6-character alphanumeric invite code
-   */
   generateInviteCode(): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
+    const bytes = getRandomValues(new Uint8Array(INVITATION_CODE_LENGTH));
+    return Array.from(bytes, (byte) => INVITATION_CODE_ALPHABET[byte & 31]).join('');
   },
 
   /**
@@ -119,10 +120,16 @@ export const CoupleService = {
       const firestore = db;
       const inviteRef = doc(firestore, 'invitations', normalizedCode);
 
-      return await runTransaction(firestore, async (txn) => {
+      if (auth?.currentUser?.uid !== joiningUser.uid) {
+        throw new Error('Sign in again before connecting with your partner.');
+      }
+      if (!InvitationCodeSchema.safeParse({ code: normalizedCode }).success) {
+        throw new Error('This invitation code is invalid. Ask your partner for a new code.');
+      }
+      const couple = await runTransaction(firestore, async (txn) => {
         const inviteSnap = await txn.get(inviteRef);
         if (!inviteSnap.exists()) {
-          throw new Error('Invitation code not found. Please double check the 6-character code.');
+          throw new Error('Invitation code not found. Please double check the code.');
         }
 
         const inviteData = inviteSnap.data();
@@ -145,7 +152,8 @@ export const CoupleService = {
         const partnerName = inviteData.creatorName || 'Partner';
         const partnerAvatar = inviteData.creatorAvatarId || 'avatar_fox';
 
-        const coupleId = `cpl_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+        // Rules resolve the invitation and couple by the same document ID.
+        const coupleId = normalizedCode;
         const coupleRef = doc(firestore, 'couples', coupleId);
 
         const newCouple: CoupleProfile = {
@@ -210,17 +218,17 @@ export const CoupleService = {
           updatedAt: serverTimestamp(),
         });
 
-        // 5. Notify partner about successful connection (Event 2)
-        NotificationService.sendNotification({
-          toUid: partnerId,
-          type: 'partner_accepted',
-          title: 'Your person is here! ❤️',
-          body: 'The wait is over. Your little world is officially connected.',
-          data: { coupleId },
-        }).catch(() => {});
-
         return newCouple;
       });
+
+      NotificationService.sendNotification({
+        toUid: couple.createdBy,
+        type: 'partner_accepted',
+        title: 'Your person is here! ❤️',
+        body: 'The wait is over. Your little world is officially connected.',
+        data: { coupleId: couple.id },
+      }).catch(() => {});
+      return couple;
     }
 
     // Mock Mode
@@ -323,8 +331,12 @@ export const CoupleService = {
           where('status', '==', 'pending')
         );
         const snap = await getDocs(q);
-        if (!snap.empty) {
-          const docSnap = snap.docs[0];
+        const docSnap = snap.docs.find((candidate) => {
+          const expiry = candidate.data().expiresAt;
+          return InvitationCodeSchema.safeParse({ code: candidate.id }).success &&
+            expiry instanceof Timestamp && expiry.toMillis() > Date.now();
+        });
+        if (docSnap) {
           const data = docSnap.data();
           const expiresAt = data.expiresAt?.toMillis ? data.expiresAt.toMillis() : (data.expiresAt || 0);
           if (Date.now() < expiresAt) {

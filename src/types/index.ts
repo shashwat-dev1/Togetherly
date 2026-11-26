@@ -81,7 +81,7 @@ export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'revoked' | 
 
 export interface CoupleInvitation {
   id: string;
-  code: string; // 6-character code
+  code: string;
   createdBy: string;
   creatorName: string;
   creatorAvatarId: string;
@@ -290,10 +290,13 @@ export const LoginSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
+export const INVITATION_CODE_LENGTH = 26;
+export const INVITATION_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
 export const InvitationCodeSchema = z.object({
   code: z
     .string()
-    .length(6, 'Invitation code must be exactly 6 characters')
-    .regex(/^[A-Z0-9]+$/, 'Code can only contain letters and numbers'),
+    .length(INVITATION_CODE_LENGTH, 'Invalid invitation code length')
+    .regex(/^[A-HJ-NP-Z2-9]+$/, 'Code can only contain letters and numbers'),
 });
 

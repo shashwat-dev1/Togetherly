@@ -36,6 +36,7 @@ import { CoupleTriviaGame } from '@/games/couple-trivia/CoupleTriviaGame';
 import { DrawAndGuessGame } from '@/games/draw-and-guess/DrawAndGuessGame';
 import { ConnectFourGame } from '@/games/connect-four/ConnectFourGame';
 import { MemoryMatchGame } from '@/games/memory-match/MemoryMatchGame';
+import { LastHeartGame } from '@/games/last-heart/LastHeartGame';
 import { WordGuessGame } from '@/games/word-guess/WordGuessGame';
 import { ArrowLeft, WifiOff, Users, Heart } from 'lucide-react-native';
 
@@ -50,7 +51,7 @@ export default function GameRunnerScreen() {
   const partnerId = couple?.memberIds.find((id) => id !== user?.uid);
   const partner = partnerId && couple?.members[partnerId] ? couple.members[partnerId] : null;
 
-  const [activeSessionId, setActiveSessionId] = useState<string | undefined>(initialSessionId);
+  const [activeSessionId, setActiveSessionId] = useState<string | undefined>();
   const [initError, setInitError] = useState<string | null>(null);
 
   // Auto-initialize session or connect to partner's active session
@@ -59,8 +60,12 @@ export default function GameRunnerScreen() {
     const initSession = async () => {
       if (activeSessionId || !user || !couple || !partnerId) return;
       try {
-        // Check for existing waiting or active session for this couple & game
-        const existingSession = await GameSessionService.getActiveSessionForCouple(couple.id, game.id);
+        const existingSession = initialSessionId
+          ? await GameSessionService.getGameSession(initialSessionId)
+          : await GameSessionService.getActiveSessionForCouple(couple.id, game.id);
+        if (initialSessionId && (!existingSession || existingSession.coupleId !== couple.id || existingSession.gameId !== game.id)) {
+          throw new Error('This game invitation is no longer available.');
+        }
         if (existingSession && isMounted) {
           if (!existingSession.readyPlayers.includes(user.uid)) {
             await GameSessionService.joinGameSession(existingSession.id, user.uid);
@@ -77,7 +82,8 @@ export default function GameRunnerScreen() {
           gameMode: game.gameMode,
         });
         if (isMounted) {
-          setActiveSessionId(session.id);
+          if (!session.readyPlayers.includes(user.uid)) await GameSessionService.joinGameSession(session.id, user.uid);
+          if (isMounted) setActiveSessionId(session.id);
         }
       } catch (err: any) {
         if (isMounted) {
@@ -89,7 +95,7 @@ export default function GameRunnerScreen() {
     return () => {
       isMounted = false;
     };
-  }, [activeSessionId, couple, game, partnerId, user]);
+  }, [activeSessionId, couple, game, initialSessionId, partnerId, user]);
 
   const {
     session,
@@ -152,7 +158,7 @@ export default function GameRunnerScreen() {
   }
 
   // --- LOADING / INITIALIZING STATE ---
-  if (!activeSessionId || (connectionState === 'connecting' && !session)) {
+  if (!initError && (!activeSessionId || (connectionState === 'connecting' && !session))) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
         <View style={styles.centerContainer}>
@@ -290,6 +296,11 @@ export default function GameRunnerScreen() {
       {/* ACTIVE / COMPLETED GAME ENGINES */}
       {session && (session.status === 'active' || session.status === 'completed' || session.status === 'ready') && user && (
         <View style={styles.gameViewContainer}>
+          {game.id === 'last-heart' && (
+            <LastHeartGame session={session} uid={user.uid} partnerName={partner.displayName}
+              take={(count) => submitAction('take_hearts', { count })} rematch={handleRematch} />
+          )}
+
           {game.id === 'who-knows-whom' && (
             <WhoKnowsWhomGame
               session={session}

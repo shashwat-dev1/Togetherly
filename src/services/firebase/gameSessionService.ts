@@ -10,6 +10,7 @@
  * - Server-authoritative completion, scoring, and rematch handling
  * - Automatic switching between Production/Emulator Firestore and reactive local mock
  */
+import { STARTING_HEARTS, takeHearts } from '@/games/last-heart/logic';
 import {
   GameSession,
   GameSessionStatus,
@@ -158,6 +159,7 @@ export const GameSessionService = {
       },
       gameState: {
         ...initialGameState,
+        ...(gameId === 'last-heart' ? { remaining: STARTING_HEARTS } : {}),
         round: 1,
         maxRounds: 5,
         turnNumber: 0,
@@ -172,11 +174,26 @@ export const GameSessionService = {
     if (runtimeMode === 'production' || runtimeMode === 'emulator') {
       if (!db) throw new Error('Firestore is not initialized');
       const sessionRef = doc(db, 'gameSessions', sessionId);
-      await setDoc(sessionRef, {
-        ...newSession,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+      const stored = { ...newSession, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+      if (gameId === 'last-heart') {
+        const lock = doc(db, 'couples', coupleId, 'gameLobbies', gameId);
+        const current = await runTransaction(db, async (transaction) => {
+          const pointer = await transaction.get(lock);
+          if (pointer.exists()) {
+            const previous = await transaction.get(doc(db!, 'gameSessions', pointer.data().sessionId));
+            const game = previous.data() as GameSession | undefined;
+            if (game && ['waiting', 'active', 'ready'].includes(game.status) && game.expiresAt > Date.now()) {
+              return game;
+            }
+          }
+          transaction.set(sessionRef, stored);
+          transaction.set(lock, { sessionId });
+          return null;
+        });
+        if (current) return current;
+      } else {
+        await setDoc(sessionRef, stored);
+      }
       NotificationService.sendNotification({
         toUid: partnerPlayerId,
         type: 'game_invitation',
@@ -356,6 +373,20 @@ export const GameSessionService = {
     payload: Record<string, any>,
     idempotencyKey?: string
   ): Promise<GameSession> {
+    if (actionType === 'take_hearts' && db && runtimeMode !== 'mock') {
+      const ref = doc(db, 'gameSessions', sessionId);
+      const updated = await runTransaction(db, async (transaction) => {
+        const snapshot = await transaction.get(ref);
+        if (!snapshot.exists()) throw new Error('Session not found');
+        const result = takeHearts(snapshot.data() as GameSession, playerId, payload.count);
+        const { gameState, scores, currentTurn, winnerId, status, xpAwarded } = result;
+        transaction.update(ref, { gameState, scores, currentTurn, winnerId, status, xpAwarded, updatedAt: serverTimestamp() });
+        return result;
+      });
+      if (updated.status === 'completed') triggerGameCompletionEngagement(updated).catch(() => {});
+      return updated;
+    }
+
     // Idempotency check
     const dedupKey = `${sessionId}_${idempotencyKey || `${playerId}_${actionType}_${Date.now()}`}`;
     if (idempotencyKey && mockActionHistory.has(dedupKey)) {
@@ -390,6 +421,12 @@ export const GameSessionService = {
     let nextTurn = partnerId;
 
     // --- GAME SPECIFIC ACTION PROCESSORS ---
+    if (session.gameId === 'last-heart' && actionType === 'take_hearts') {
+      const result = takeHearts(session, playerId, payload.count);
+      mockSessions.set(sessionId, result);
+      notifyMockSubscribers(sessionId, result);
+      return result;
+    }
     if (session.gameId === 'tic-tac-toe') {
       const { index, symbol } = payload;
       const board = [...(nextGameState.board || Array(9).fill(null))];
@@ -449,7 +486,7 @@ export const GameSessionService = {
         playerId,
         actionType,
         payload,
-        idempotencyKey,
+        ...(idempotencyKey ? { idempotencyKey } : {}),
         serverTimestamp: serverTimestamp(),
       });
       await updateDoc(sessionRef, {

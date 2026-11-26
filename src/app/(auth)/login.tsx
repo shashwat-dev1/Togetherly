@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
@@ -18,7 +19,6 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { AppButton } from '@/components/common/AppButton';
 import { AppTextInput } from '@/components/common/AppTextInput';
 import { LoginSchema } from '@/types';
-import { Heart } from 'lucide-react-native';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -62,7 +62,7 @@ export default function LoginScreen() {
                 { backgroundColor: theme.colors.primaryLight },
               ]}
             >
-              <Heart size={32} color={theme.colors.primaryDark} fill={theme.colors.primaryDark} />
+              <Image source={require('../../../assets/images/togetherly-brand.png')} style={{ width: 64, height: 64, borderRadius: 15 }} accessibilityLabel="Togetherly" />
             </View>
             <Text style={[styles.brandTitle, { color: theme.colors.textPrimary }]}>
               Togetherly

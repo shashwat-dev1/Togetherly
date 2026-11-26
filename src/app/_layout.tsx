@@ -10,6 +10,7 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import * as SplashScreen from 'expo-splash-screen';
 import { BackendConnectionBanner } from '@/components/common/BackendConnectionBanner';
 
+SplashScreen.setOptions({ duration: 380, fade: true });
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const queryClient = new QueryClient({

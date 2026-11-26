@@ -3,7 +3,6 @@
  */
 import { RegisterSchema, InvitationCodeSchema } from '../../types';
 import { CoupleService } from '../../services/firebase/coupleService';
-
 describe('Validation Schemas (Zod)', () => {
   test('validates correct registration payloads', () => {
     const valid = {
@@ -25,18 +24,18 @@ describe('Validation Schemas (Zod)', () => {
     expect(res.success).toBe(false);
   });
 
-  test('validates 6-character invitation code', () => {
-    expect(InvitationCodeSchema.safeParse({ code: 'ABC123' }).success).toBe(true);
+  test('validates 26-character invitation code', () => {
+    expect(InvitationCodeSchema.safeParse({ code: 'A'.repeat(26) }).success).toBe(true);
     expect(InvitationCodeSchema.safeParse({ code: 'TOOLONG' }).success).toBe(false);
     expect(InvitationCodeSchema.safeParse({ code: 'SHRT' }).success).toBe(false);
-    expect(InvitationCodeSchema.safeParse({ code: 'ab#123' }).success).toBe(false);
+    expect(InvitationCodeSchema.safeParse({ code: '0' + 'A'.repeat(25) }).success).toBe(false);
   });
 });
 
 describe('Couple Pairing Lifecycle', () => {
-  test('generates unique 6-character alphanumeric invite codes', () => {
+  test('generates 26-character alphanumeric invite codes', () => {
     const code = CoupleService.generateInviteCode();
-    expect(code).toHaveLength(6);
+    expect(code).toHaveLength(26);
     expect(code).toMatch(/^[A-Z0-9]+$/);
   });
 
@@ -61,7 +60,7 @@ describe('Couple Pairing Lifecycle', () => {
     };
 
     const invite = await CoupleService.createInvitation(mockUser);
-    expect(invite.code).toHaveLength(6);
+    expect(invite.code).toHaveLength(26);
     expect(invite.createdBy).toBe(mockUser.uid);
     expect(invite.status).toBe('pending');
     expect(invite.expiresAt - invite.createdAt).toBe(48 * 60 * 60 * 1000);
