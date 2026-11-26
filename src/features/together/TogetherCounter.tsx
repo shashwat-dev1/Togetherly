@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet, Platform } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { collection, deleteDoc, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { Heart } from 'lucide-react-native';
@@ -9,6 +9,8 @@ import { AppTextInput } from '@/components/common/AppTextInput';
 import { db } from '@/services/firebase/config';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { parseTogetherDate, togetherDuration, TOGETHER_DATES, TogetherDateId } from './togetherDates';
+
+import { clearTimeTogetherWidget, writeTimeTogetherWidget } from './timeTogetherWidget';
 
 const dateIds = Object.keys(TOGETHER_DATES) as TogetherDateId[];
 
@@ -21,6 +23,7 @@ export function TogetherCounter({ coupleId }: { coupleId: string }) {
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState('');
+  const [widgetNotice, setWidgetNotice] = useState('');
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -114,6 +117,30 @@ export function TogetherCounter({ coupleId }: { coupleId: string }) {
       ) : (
         <AppButton title={duration ? 'Manage dates' : 'Add a date'} size="sm" variant="outline" disabled={!loaded}
           onPress={() => { setDraft(dates[selected] ?? ''); setEditing(true); }} />
+      )}
+      {Platform.OS === 'android' && !editing && loaded && (
+        <>
+          <View style={styles.choices}>
+            {duration && active && <AppButton title="Update home widget" size="sm" variant="ghost" onPress={() => {
+              try {
+                const { years, months, days } = duration;
+                writeTimeTogetherWidget(`${years}y  ${months}m  ${days}d together`, `${TOGETHER_DATES[active]} · ${dates[active]}`);
+                setWidgetNotice('Snapshot updated. Find Time Together in the Android widget picker.');
+              } catch {
+                setWidgetNotice('The home widget could not update on this device.');
+              }
+            }} />}
+            <AppButton title="Clear widget" size="sm" variant="ghost" onPress={() => {
+              try {
+                clearTimeTogetherWidget();
+                setWidgetNotice('Home widget cleared.');
+              } catch {
+                setWidgetNotice('The home widget could not be cleared.');
+              }
+            }} />
+          </View>
+          {!!widgetNotice && <Text accessibilityLiveRegion="polite" style={secondary}>{widgetNotice}</Text>}
+        </>
       )}
       {!!error && <Text accessibilityRole="alert" style={{ color: theme.colors.error }}>{error}</Text>}
     </AppCard>

@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.togetherly.couples",
-      "versionCode": 2,
+      "versionCode": 3,
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "INTERNET",
@@ -48,6 +48,24 @@
           "backgroundColor": "#801275",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 152
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "enableAndroid": true,
+          "widgets": [
+            {
+              "name": "TogetherlyTimeTogether",
+              "displayName": "Time Together",
+              "description": "A snapshot of the time since your special date.",
+              "android": {
+                "targetCellWidth": 4,
+                "targetCellHeight": 2,
+                "initialLayout": "./src/features/together/timeTogetherWidget.android.tsx"
+              }
+            }
+          ]
         }
       ]
     ],

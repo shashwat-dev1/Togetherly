@@ -15,6 +15,7 @@ import {
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured, runtimeMode } from './config';
 import { UserProfile, UserPreferences } from '@/types';
+import { clearTimeTogetherWidget } from '@/features/together/timeTogetherWidget';
 
 // In-memory mock store for offline testing and fast local preview
 let mockUser: UserProfile | null = {
@@ -249,6 +250,11 @@ export const AuthService = {
   },
 
   async logout(): Promise<void> {
+    try {
+      clearTimeTogetherWidget();
+    } catch (error) {
+      console.warn('[AuthService] Could not clear the home widget:', error);
+    }
     if (isFirebaseConfigured && auth) {
       await signOut(auth);
     }
